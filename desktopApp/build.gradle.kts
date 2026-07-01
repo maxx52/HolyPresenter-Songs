@@ -10,16 +10,12 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutinesSwing)
     implementation(libs.compose.uiToolingPreview)
+    implementation("org.holypresenter:platform-api:0.1.0")
+    implementation("org.jetbrains.compose.runtime:runtime:1.11.1")
+    implementation("org.jetbrains.compose.material3:material3:1.9.0")
 }
 
-compose.desktop {
-    application {
-        mainClass = "org.example.holypresenter_songs.MainKt"
-
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "org.example.holypresenter_songs"
-            packageVersion = "1.0.0"
-        }
-    }
+tasks.withType<Jar>().configureEach {
+    archiveBaseName.set("songs")
+    archiveVersion.set("")
 }
