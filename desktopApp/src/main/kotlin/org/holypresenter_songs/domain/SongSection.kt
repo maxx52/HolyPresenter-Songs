@@ -3,5 +3,5 @@ package org.holypresenter_songs.domain
 data class SongSection(
     val type: SongSectionType,
     val number: Int = 1,
-    val lines: List<String>
+    val slides: List<SongSlide>
 )

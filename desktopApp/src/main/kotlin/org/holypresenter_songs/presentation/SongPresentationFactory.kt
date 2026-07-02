@@ -17,7 +17,7 @@ class SongPresentationFactory {
                         TextElement(
                             id = "${song.id.value}-text-$index",
                             slot = SlotId("lyrics"),
-                            text = section.lines.joinToString("\n")
+                            text = section.slides.joinToString("\n")
                         )
                     )
                 )

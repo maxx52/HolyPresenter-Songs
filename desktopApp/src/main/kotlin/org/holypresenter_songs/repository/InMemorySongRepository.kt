@@ -15,9 +15,19 @@ class InMemorySongRepository : SongRepository {
                 SongSection(
                     type = SongSectionType.VERSE,
                     number = 1,
-                    lines = listOf(
-                        "Amazing grace! How sweet the sound",
-                        "That saved a wretch like me"
+                    slides = listOf(
+                        SongSlide(
+                            lines = listOf(
+                                "Amazing grace! How sweet the sound",
+                                "That saved a wretch like me"
+                            )
+                        ),
+                        SongSlide(
+                            lines = listOf(
+                                "I once was lost, but now am found",
+                                "Was blind, but now I see"
+                            )
+                        )
                     )
                 )
             )
