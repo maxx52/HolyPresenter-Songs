@@ -1,9 +1,9 @@
-package org.holypresenter_songs.service
+package org.holypresenter_songs.repository
 
 import org.holypresenter_songs.domain.*
 
-class InMemorySongService : SongService {
-    override val songs: List<Song> = listOf(
+class InMemorySongRepository : SongRepository {
+    private val songs = mutableListOf(
         Song(
             id = SongId("amazing-grace"),
             metadata = SongMetadata(
@@ -19,15 +19,22 @@ class InMemorySongService : SongService {
                         "Amazing grace! How sweet the sound",
                         "That saved a wretch like me"
                     )
-                ),
-                SongSection(
-                    type = SongSectionType.CHORUS,
-                    lines = listOf(
-                        "Amazing grace, amazing grace",
-                        "How sweet the sound"
-                    )
                 )
             )
         )
     )
+
+    override fun getAll(): List<Song> = songs.toList()
+
+    override fun findById(id: SongId): Song? =
+        songs.firstOrNull { it.id == id }
+
+    override fun save(song: Song) {
+        val index = songs.indexOfFirst { it.id == song.id }
+        if (index >= 0) songs[index] = song else songs += song
+    }
+
+    override fun delete(id: SongId) {
+        songs.removeAll { it.id == id }
+    }
 }

@@ -1,11 +1,12 @@
 package org.holypresenter_songs
 
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import holypresenter.org.platform.api.module.HolyModule
 import holypresenter.org.platform.api.module.ModuleMetadata
+import org.holypresenter_songs.ui.SongsWorkspace
 
 class SongsModule : HolyModule {
+
     override val metadata = ModuleMetadata(
         id = "songs",
         name = "Songs",
@@ -17,6 +18,6 @@ class SongsModule : HolyModule {
 
     @Composable
     override fun Workspace() {
-        Text("Songs Module")
+        SongsWorkspace()
     }
 }
