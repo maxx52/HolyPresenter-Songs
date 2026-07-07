@@ -81,6 +81,23 @@ fun SongStructurePane(
                             sections = updatedSections
                         )
                         onSlideChanged(updatedSong)
+                    },
+                    onDeleteSlide = { section, slide ->
+                        val updatedSections = song.sections.mapNotNull { currentSection ->
+                            if (currentSection != section) {
+                                currentSection
+                            } else {
+                                val updatedSlides = currentSection.slides - slide
+
+                                if (updatedSlides.isEmpty()) {
+                                    null
+                                } else {
+                                    currentSection.copy(slides = updatedSlides)
+                                }
+                            }
+                        }
+                        val updatedSong = song.copy(sections = updatedSections)
+                        onSongChanged(updatedSong)
                     }
                 )
                 Spacer(Modifier.height(12.dp))

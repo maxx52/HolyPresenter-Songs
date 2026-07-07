@@ -3,9 +3,7 @@ package org.holypresenter_songs.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -20,7 +18,8 @@ fun SongSectionItem(
     onAddSlide: (SongSection) -> Unit = {},
     selectedSlide: SongSlide? = null,
     onSlideSelected: (SongSlide) -> Unit = {},
-    onSlideChanged: (SongSlide, String) -> Unit = { _, _ -> }
+    onSlideChanged: (SongSlide, String) -> Unit = { _, _ -> },
+    onDeleteSlide: (SongSection, SongSlide) -> Unit = { _, _ -> }
 ) {
     Row(
         modifier = modifier.fillMaxWidth()
@@ -54,19 +53,21 @@ fun SongSectionItem(
 
                 Spacer(Modifier.height(18.dp))
 
-                section.slides.forEachIndexed { index, slide ->
+                section.slides.forEachIndexed { _, slide ->
 
                     SongSlideCard(
                         slide = slide,
                         selected = slide == selectedSlide,
-                        onClick = {
+                        onSelect = {
                             onSlideSelected(slide)
                         },
-                        onTextChanged = {
+                        onTextChange = {
                             onSlideChanged(slide, it)
+                        },
+                        onDelete = {
+                            onDeleteSlide(section, slide)
                         }
                     )
-
                     Spacer(Modifier.height(12.dp))
                 }
                 AddSlideButton(

@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -17,16 +18,17 @@ import androidx.compose.ui.focus.onFocusChanged
 @Composable
 fun SongSlideCard(
     slide: SongSlide,
-    selected: Boolean = false,
-    onClick: () -> Unit = {},
-    onTextChanged: (String) -> Unit = {},
+    selected: Boolean,
+    onSelect: () -> Unit,
+    onTextChange: (String) -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .clickable {
-                onClick()
+                onSelect()
             },
         shape = RoundedCornerShape(12.dp),
         tonalElevation = 1.dp,
@@ -51,12 +53,12 @@ fun SongSlideCard(
 
             BasicTextField(
                 value = slide.lines.joinToString("\n"),
-                onValueChange = onTextChanged,
+                onValueChange = onTextChange,
                 modifier = Modifier
                     .weight(1f)
                     .padding(vertical = 4.dp)
                     .onFocusChanged {
-                        if (it.isFocused) onClick()
+                        if (it.isFocused) onSelect()
                     },
                 minLines = 1,
                 textStyle = MaterialTheme.typography.bodyMedium.copy(
@@ -67,11 +69,11 @@ fun SongSlideCard(
 
             Spacer(Modifier.width(12.dp))
 
-            Text(
-                text = "⋮",
-                color = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+            TextButton(
+                onClick = onDelete
+            ) {
+                Text("Удалить")
+            }
         }
     }
 }
