@@ -21,6 +21,7 @@ fun SongSlideCard(
     onSelect: () -> Unit,
     onTextChange: (String) -> Unit,
     onDelete: () -> Unit,
+    onDuplicate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -69,9 +70,7 @@ fun SongSlideCard(
             Spacer(Modifier.width(12.dp))
 
             SongSlideMenu(
-                onDuplicate = {
-                    // пока пусто
-                },
+                onDuplicate = onDuplicate,
                 onDelete = onDelete
             )
         }

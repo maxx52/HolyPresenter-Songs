@@ -12,14 +12,17 @@ import org.holypresenter_songs.domain.SongSlide
 import org.holypresenter_songs.ui.common.color
 
 @Composable
-fun SongSectionItem(
+fun SongSectionCard(
     section: SongSection,
     modifier: Modifier = Modifier,
     onAddSlide: (SongSection) -> Unit = {},
     selectedSlide: SongSlide? = null,
     onSlideSelected: (SongSlide) -> Unit = {},
     onSlideChanged: (SongSlide, String) -> Unit = { _, _ -> },
-    onDeleteSlide: (SongSection, SongSlide) -> Unit = { _, _ -> }
+    onDuplicateSlide: (SongSection, SongSlide) -> Unit = { _, _ -> },
+    onDeleteSlide: (SongSection, SongSlide) -> Unit = { _, _ -> },
+    onDuplicateSection: (SongSection) -> Unit = {},
+    onDeleteSection: (SongSection) -> Unit = {},
 ) {
     Row(
         modifier = modifier.fillMaxWidth()
@@ -49,7 +52,15 @@ fun SongSectionItem(
             Column(
                 modifier = Modifier.padding(18.dp)
             ) {
-                SongSectionHeader(section)
+                SongSectionHeader(
+                    section = section,
+                    onDuplicate = {
+                        onDuplicateSection(section)
+                    },
+                    onDelete = {
+                        onDeleteSection(section)
+                    }
+                )
 
                 Spacer(Modifier.height(18.dp))
 
@@ -66,6 +77,9 @@ fun SongSectionItem(
                         },
                         onDelete = {
                             onDeleteSlide(section, slide)
+                        },
+                        onDuplicate = {
+                            onDuplicateSlide(section, slide)
                         }
                     )
                     Spacer(Modifier.height(12.dp))

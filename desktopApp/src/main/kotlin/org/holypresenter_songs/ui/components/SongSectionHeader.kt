@@ -16,7 +16,9 @@ import org.holypresenter_songs.ui.common.title
 
 @Composable
 fun SongSectionHeader(
-    section: SongSection
+    section: SongSection,
+    onDuplicate: () -> Unit = {},
+    onDelete: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -24,7 +26,6 @@ fun SongSectionHeader(
             .height(48.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Box(
             modifier = Modifier
                 .size(12.dp)
@@ -50,10 +51,9 @@ fun SongSectionHeader(
 
         Text("⋮⋮")
 
-        IconButton(
-            onClick = {}
-        ) {
-            Text("⋮")
-        }
+        SongSectionMenu(
+            onDuplicate = onDuplicate,
+            onDelete = onDelete
+        )
     }
 }

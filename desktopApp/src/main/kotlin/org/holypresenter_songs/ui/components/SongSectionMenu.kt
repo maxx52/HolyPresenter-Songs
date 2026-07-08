@@ -2,16 +2,14 @@ package org.holypresenter_songs.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun SongSlideMenu(
+fun SongSectionMenu(
+    onRename: () -> Unit = {},
     onDuplicate: () -> Unit = {},
     onDelete: () -> Unit = {}
 ) {
@@ -21,17 +19,24 @@ fun SongSlideMenu(
         modifier = Modifier.wrapContentSize(Alignment.TopEnd)
     ) {
         IconButton(
-            onClick = { expanded = true }
+            onClick = {
+                expanded = true
+            }
         ) {
             Text("⋮")
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = {
+                expanded = false
+            }
         ) {
+
             DropdownMenuItem(
-                text = { Text("Дублировать") },
+                text = {
+                    Text("Дублировать")
+                },
                 onClick = {
                     expanded = false
                     onDuplicate()
@@ -39,7 +44,9 @@ fun SongSlideMenu(
             )
 
             DropdownMenuItem(
-                text = { Text("Удалить") },
+                text = {
+                    Text("Удалить")
+                },
                 onClick = {
                     expanded = false
                     onDelete()

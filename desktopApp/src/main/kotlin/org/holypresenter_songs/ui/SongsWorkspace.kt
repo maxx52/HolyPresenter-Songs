@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.projection.ProjectionService
+import org.holypresenter_songs.domain.Song
+import org.holypresenter_songs.domain.editor.SongEditor
 import org.holypresenter_songs.presentation.SongPresentationFactory
 import org.holypresenter_songs.repository.SongRepository
 import org.holypresenter_songs.ui.order.SongOrderPane
@@ -45,6 +47,13 @@ fun SongsWorkspace(
         context.services.get(ProjectionService::class)
     }
 
+    val songEditor = remember { SongEditor() }
+
+    fun applySongChange(updatedSong: Song) {
+        repository.save(updatedSong)
+        song = updatedSong
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,27 +70,20 @@ fun SongsWorkspace(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             SongStructurePane(
+                editor = songEditor,
+                onSongChanged = { updatedSong ->
+                    applySongChange(updatedSong)
+                },
                 song = song,
                 modifier = Modifier.weight(0.28f),
-                onSongChanged = { updatedSong ->
-                    repository.save(updatedSong)
-                    song = updatedSong
-                },
                 onAddSection = { section ->
-                    val updatedSong = song!!.copy(
-                        sections = song!!.sections + section
-                    )
-
-                    repository.save(updatedSong)
-                    song = updatedSong
+                    song?.let {
+                        applySongChange(songEditor.addSection(it, section))
+                    }
                 },
                 selectedSlide = selectedSlide,
                 onSlideSelected = {
                     selectedSlide = it
-                },
-                onSlideChanged = { updatedSong ->
-                    repository.save(updatedSong)
-                    song = updatedSong
                 }
             )
 

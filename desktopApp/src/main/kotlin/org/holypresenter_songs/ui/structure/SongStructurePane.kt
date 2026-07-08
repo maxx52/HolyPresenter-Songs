@@ -3,114 +3,88 @@ package org.holypresenter_songs.ui.structure
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.SongSection
 import org.holypresenter_songs.domain.SongSectionType
 import org.holypresenter_songs.domain.SongSlide
+import org.holypresenter_songs.domain.editor.SongEditor
 import org.holypresenter_songs.ui.components.AddSectionButton
 import org.holypresenter_songs.ui.components.AddSectionDialog
-import org.holypresenter_songs.ui.components.SongSectionItem
+import org.holypresenter_songs.ui.components.SongSectionCard
 
 @Composable
 fun SongStructurePane(
     song: Song?,
     modifier: Modifier = Modifier,
-    onAddSection: (SongSection) -> Unit = {},
-    onSongChanged: (Song) -> Unit = {},
     selectedSlide: SongSlide? = null,
     onSlideSelected: (SongSlide) -> Unit = {},
-    onSlideChanged: (Song) -> Unit = {}
+    onAddSection: (SongSection) -> Unit = {},
+    onSongChanged: (Song) -> Unit = {},
+    editor: SongEditor,
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
 
-    Card(modifier = modifier
-        .fillMaxHeight()
-        .verticalScroll(rememberScrollState())
+    Card(
+        modifier = modifier
+            .fillMaxHeight()
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Text("Структура песни", style = MaterialTheme.typography.titleMedium)
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Text(
+                text = "Структура песни",
+                style = MaterialTheme.typography.titleMedium
+            )
+
             Spacer(Modifier.height(12.dp))
 
             song?.sections?.forEach { section ->
-                SongSectionItem(
+                SongSectionCard(
                     section = section,
                     selectedSlide = selectedSlide,
                     onSlideSelected = onSlideSelected,
-                    onAddSlide = { selectedSection ->
-                        val updatedSections = song.sections.map {
-                            if (it == selectedSection) {
-                                it.copy(
-                                    slides = it.slides + SongSlide(
-                                        lines = listOf("")
-                                    )
-                                )
-                            } else {
-                                it
-                            }
-                        }
-                        val updatedSong = song.copy(
-                            sections = updatedSections
-                        )
-                        onSongChanged(updatedSong)
+                    onAddSlide = { section ->
+                        onSongChanged(editor.addSlide(song, section))
                     },
-                    onSlideChanged = { slide, newText ->
-                        val updatedSections = song.sections.map { currentSection ->
-                            if (currentSection != section) {
-                                currentSection
-                            } else {
-                                currentSection.copy(
-                                    slides = currentSection.slides.map {
-                                        if (it == slide) {
-                                            it.copy(lines = newText.lines())
-                                        } else {
-                                            it
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                        val updatedSong = song.copy(
-                            sections = updatedSections
-                        )
-                        onSlideChanged(updatedSong)
+                    onSlideChanged = { slide, text ->
+                        onSongChanged(editor.updateSlideText(song, section, slide, text))
                     },
                     onDeleteSlide = { section, slide ->
-                        val updatedSections = song.sections.mapNotNull { currentSection ->
-                            if (currentSection != section) {
-                                currentSection
-                            } else {
-                                val updatedSlides = currentSection.slides - slide
-
-                                if (updatedSlides.isEmpty()) {
-                                    null
-                                } else {
-                                    currentSection.copy(slides = updatedSlides)
-                                }
-                            }
-                        }
-                        val updatedSong = song.copy(sections = updatedSections)
-                        onSongChanged(updatedSong)
+                        onSongChanged(editor.deleteSlide(song, section, slide))
+                    },
+                    onDuplicateSlide = { section, slide ->
+                        onSongChanged(editor.duplicateSlide(song, section, slide))
+                    },
+                    onDeleteSection = { section ->
+                        onSongChanged(editor.deleteSection(song, section))
+                    },
+                    onDuplicateSection = { section ->
+                        onSongChanged(editor.duplicateSection(song, section))
                     }
                 )
                 Spacer(Modifier.height(12.dp))
             }
             AddSectionButton(
-                onClick = { showAddDialog = true }
+                onClick = {
+                    showAddDialog = true
+                }
             )
         }
     }
 
     if (showAddDialog) {
         AddSectionDialog(
-            onDismiss = { showAddDialog = false },
+            onDismiss = {
+                showAddDialog = false
+            },
             onCreate = { type ->
                 onAddSection(
                     SongSection(
