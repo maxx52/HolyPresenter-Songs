@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.holypresenter.platform.ui.interaction.dragdrop.HolyDragHandle
 import org.holypresenter_songs.domain.SongSection
 import org.holypresenter_songs.ui.common.color
 import org.holypresenter_songs.ui.common.title
@@ -49,7 +50,7 @@ fun SongSectionHeader(
 
         Spacer(Modifier.weight(1f))
 
-        Text("⋮⋮")
+        HolyDragHandle()
 
         SongSectionMenu(
             onDuplicate = onDuplicate,

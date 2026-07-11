@@ -1,11 +1,7 @@
 package org.holypresenter_songs.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import holypresenter.org.platform.api.module.ModuleContext
@@ -13,6 +9,7 @@ import holypresenter.org.platform.api.projection.ProjectionService
 import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.editor.SongEditor
 import org.holypresenter_songs.presentation.SongPresentationFactory
+import org.holypresenter_songs.presentation.rememberSongEditorState
 import org.holypresenter_songs.repository.SongRepository
 import org.holypresenter_songs.ui.order.SongOrderPane
 import org.holypresenter_songs.ui.preview.SongPreviewPane
@@ -25,33 +22,23 @@ fun SongsWorkspace(
     context: ModuleContext,
     repository: SongRepository
 ) {
-    var song by remember {
-        mutableStateOf(repository.getAll().firstOrNull())
-    }
-
-    var selectedSlide by remember(song) {
-        mutableStateOf(
-            song
-                ?.sections
-                ?.firstOrNull()
-                ?.slides
-                ?.firstOrNull()
-        )
-    }
-
-    var themePanelVisible by remember { mutableStateOf(true) }
-
+    val editorState = rememberSongEditorState()
+    val songEditor = remember { SongEditor() }
     val presentationFactory = remember { SongPresentationFactory() }
 
     val projectionService = remember {
         context.services.get(ProjectionService::class)
     }
 
-    val songEditor = remember { SongEditor() }
+    LaunchedEffect(Unit) {
+        editorState.updateSong(
+            repository.getAll().firstOrNull()
+        )
+    }
 
     fun applySongChange(updatedSong: Song) {
         repository.save(updatedSong)
-        song = updatedSong
+        editorState.updateSong(updatedSong)
     }
 
     Column(
@@ -59,7 +46,9 @@ fun SongsWorkspace(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        SongsTopBar(song = song)
+        SongsTopBar(
+            song = editorState.song
+        )
 
         Spacer(Modifier.height(16.dp))
 
@@ -70,44 +59,53 @@ fun SongsWorkspace(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             SongStructurePane(
+                song = editorState.song,
                 editor = songEditor,
-                onSongChanged = { updatedSong ->
-                    applySongChange(updatedSong)
-                },
-                song = song,
                 modifier = Modifier.weight(0.28f),
-                onAddSection = { section ->
-                    song?.let {
-                        applySongChange(songEditor.addSection(it, section))
+                selectedSlide = editorState.selectedSlide,
+                onSlideSelected = { slide ->
+                    val section = editorState.song
+                        ?.sections
+                        ?.firstOrNull { slide in it.slides }
+
+                    if (section != null) {
+                        editorState.selectSlide(section, slide)
                     }
                 },
-                selectedSlide = selectedSlide,
-                onSlideSelected = {
-                    selectedSlide = it
+                onAddSection = { section ->
+                    val currentSong = editorState.song ?: return@SongStructurePane
+                    applySongChange(
+                        songEditor.addSection(currentSong, section)
+                    )
+                },
+                onSongChanged = { updatedSong ->
+                    applySongChange(updatedSong)
                 }
             )
 
             SongOrderPane(
-                song = song,
-                modifier = Modifier.weight(0.22f)
+                song = editorState.song,
+                modifier = Modifier.weight(0.22f),
+                onSongChanged = { updatedSong ->
+                    applySongChange(updatedSong)
+                }
             )
 
             SongPreviewPane(
-                selectedSlide = selectedSlide,
+                selectedSlide = editorState.selectedSlide,
                 modifier = Modifier.weight(0.32f),
                 onShowClick = {
-                    val currentSong = song ?: return@SongPreviewPane
+                    val currentSong = editorState.song ?: return@SongPreviewPane
+
                     projectionService?.present(
                         presentationFactory.create(currentSong)
                     )
                 }
             )
 
-            if (themePanelVisible) {
-                SongThemePane(
-                    modifier = Modifier.weight(0.18f)
-                )
-            }
+            SongThemePane(
+                modifier = Modifier.weight(0.18f)
+            )
         }
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import org.holypresenter_songs.domain.SongSlide
 import androidx.compose.ui.focus.onFocusChanged
+import org.holypresenter.platform.ui.interaction.dragdrop.HolyDragHandle
 
 @Composable
 fun SongSlideCard(
@@ -43,11 +44,7 @@ fun SongSlideCard(
                 .fillMaxWidth()
                 .padding(12.dp)
         ) {
-            Text(
-                text = "⋮\n⋮\n⋮",
-                color = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+            HolyDragHandle()
 
             Spacer(Modifier.width(12.dp))
 
