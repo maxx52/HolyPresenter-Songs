@@ -1,120 +1,51 @@
 package org.holypresenter_songs.domain.editor
 
-import org.holypresenter_songs.domain.Song
-import org.holypresenter_songs.domain.SongSection
-import org.holypresenter_songs.domain.SongSlide
+import org.holypresenter_songs.domain.editor.command.SongEditCommand
 import org.holypresenter_songs.domain.editor.command.SongEditCommandStack
-import org.holypresenter_songs.domain.editor.command.UpdateSlideTextCommand
-import org.holypresenter_songs.domain.editor.command.section.AddSectionCommand
-import org.holypresenter_songs.domain.editor.command.section.DuplicateSectionCommand
-import org.holypresenter_songs.domain.editor.command.slide.AddSlideCommand
-import org.holypresenter_songs.domain.editor.command.slide.DeleteSlideCommand
-import org.holypresenter_songs.domain.editor.command.section.MoveSectionCommand
-import org.holypresenter_songs.domain.editor.command.slide.DuplicateSlideCommand
+import org.holypresenter_songs.presentation.SongEditorState
+import org.holypresenter_songs.repository.SongRepository
 
-class SongEditor {
+class SongEditor(
+    private val repository: SongRepository,
+    private val state: SongEditorState
+) {
     private val commandStack = SongEditCommandStack()
 
-    fun addSection(
-        song: Song,
-        section: SongSection
-    ): Song =
-        commandStack.execute(
-            song,
-            AddSectionCommand(section)
-        )
+    val canUndo: Boolean
+        get() = commandStack.canUndo
 
-    fun addSlide(
-        song: Song,
-        section: SongSection
-    ): Song =
-        commandStack.execute(
-            song,
-            AddSlideCommand(section)
-        )
+    val canRedo: Boolean
+        get() = commandStack.canRedo
 
-    fun updateSlideText(
-        song: Song,
-        section: SongSection,
-        slide: SongSlide,
-        text: String
-    ): Song {
-        val oldText = slide.lines.joinToString("\n")
+    val undoDescription: String?
+        get() = commandStack.undoDescription
 
-        return commandStack.execute(
-            song,
-            UpdateSlideTextCommand(
-                section = section,
-                slide = slide,
-                oldText = oldText,
-                newText = text
-            )
-        )
+    val redoDescription: String?
+        get() = commandStack.redoDescription
+
+    fun execute(command: SongEditCommand) {
+        val currentSong = state.song ?: return
+        val updatedSong = commandStack.execute(currentSong, command)
+
+        repository.save(updatedSong)
+        state.updateSong(updatedSong)
     }
 
-    fun deleteSlide(
-        song: Song,
-        section: SongSection,
-        slide: SongSlide
-    ): Song =
-        commandStack.execute(
-            song,
-            DeleteSlideCommand(section, slide)
-        )
+    fun undo() {
+        val currentSong = state.song ?: return
 
-    fun duplicateSlide(
-        song: Song,
-        section: SongSection,
-        slide: SongSlide
-    ): Song =
-        commandStack.execute(
-            song,
-            DuplicateSlideCommand(section, slide)
-        )
+        commandStack.undo(currentSong)?.let {
+            repository.save(it)
+            state.updateSong(it)
+        }
+    }
 
-    fun deleteSection(song: Song, section: SongSection): Song =
-        song.copy(sections = song.sections - section)
+    fun redo() {
+        val currentSong = state.song ?: return
 
-    fun duplicateSection(
-        song: Song,
-        section: SongSection
-    ): Song =
-        commandStack.execute(
-            song,
-            DuplicateSectionCommand(section)
-        )
-
-    fun moveSection(
-        song: Song,
-        fromIndex: Int,
-        toIndex: Int
-    ): Song =
-        commandStack.execute(
-            song,
-            MoveSectionCommand(
-                fromIndex = fromIndex,
-                toIndex = toIndex
-            )
-        )
-
-    private fun updateSection(
-        song: Song,
-        section: SongSection,
-        transform: (SongSection) -> SongSection
-    ): Song =
-        song.copy(
-            sections = song.sections.map { currentSection ->
-                if (currentSection == section) {
-                    transform(currentSection)
-                } else {
-                    currentSection
-                }
-            }
-        )
-
-    fun undo(song: Song): Song? =
-        commandStack.undo(song)
-
-    fun redo(song: Song): Song? =
-        commandStack.redo(song)
+        commandStack.redo(currentSong)?.let {
+            repository.save(it)
+            state.updateSong(it)
+        }
+    }
 }

@@ -8,7 +8,7 @@ import org.holypresenter_songs.repository.InMemorySongRepository
 import org.holypresenter_songs.repository.SongRepository
 import org.holypresenter_songs.ui.SongsWorkspace
 
-class SongsModule : HolyModule {
+class SongModule : HolyModule {
     private val repository: SongRepository = InMemorySongRepository()
     private lateinit var context: ModuleContext
 
@@ -28,7 +28,7 @@ class SongsModule : HolyModule {
     @Composable
     override fun Workspace() {
         SongsWorkspace(
-            context = context,
+            moduleContext = context,
             repository = repository
         )
     }

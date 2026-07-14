@@ -11,6 +11,8 @@ class SongEditorState {
     var song: Song? by mutableStateOf(null)
     var selectedSection: SongSection? by mutableStateOf(null)
     var selectedSlide: SongSlide? by mutableStateOf(null)
+    var previewOverlayOpacity: Float? by mutableStateOf(null)
+    var previewFontSize: Int? by mutableStateOf(null)
 
     fun updateSong(song: Song?) {
         this.song = song

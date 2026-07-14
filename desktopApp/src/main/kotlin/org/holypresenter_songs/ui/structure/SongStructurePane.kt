@@ -1,38 +1,48 @@
 package org.holypresenter_songs.ui.structure
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.SongSection
 import org.holypresenter_songs.domain.SongSectionType
 import org.holypresenter_songs.domain.SongSlide
-import org.holypresenter_songs.domain.editor.SongEditor
+import org.holypresenter_songs.domain.editor.command.UpdateSlideTextCommand
+import org.holypresenter_songs.domain.editor.command.section.AddSectionCommand
+import org.holypresenter_songs.domain.editor.command.section.DeleteSectionCommand
+import org.holypresenter_songs.domain.editor.command.section.DuplicateSectionCommand
+import org.holypresenter_songs.domain.editor.command.slide.AddSlideCommand
+import org.holypresenter_songs.domain.editor.command.slide.DeleteSlideCommand
+import org.holypresenter_songs.domain.editor.command.slide.DuplicateSlideCommand
+import org.holypresenter_songs.presentation.SongEditorContext
 import org.holypresenter_songs.ui.components.AddSectionButton
 import org.holypresenter_songs.ui.components.AddSectionDialog
 import org.holypresenter_songs.ui.components.SongSectionCard
 
 @Composable
 fun SongStructurePane(
-    song: Song?,
-    modifier: Modifier = Modifier,
-    selectedSlide: SongSlide? = null,
-    onSlideSelected: (SongSlide) -> Unit = {},
-    onAddSection: (SongSection) -> Unit = {},
-    onSongChanged: (Song) -> Unit = {},
-    editor: SongEditor,
+    context: SongEditorContext,
+    modifier: Modifier = Modifier
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
+    val song = context.state.song
+    val selectedSlide = context.state.selectedSlide
 
     Card(
-        modifier = modifier
-            .fillMaxHeight()
+        modifier = modifier.fillMaxHeight()
     ) {
         Column(
             modifier = Modifier
@@ -50,28 +60,65 @@ fun SongStructurePane(
                 SongSectionCard(
                     section = section,
                     selectedSlide = selectedSlide,
-                    onSlideSelected = onSlideSelected,
-                    onAddSlide = { section ->
-                        onSongChanged(editor.addSlide(song, section))
+
+                    onSlideSelected = { slide ->
+                        context.state.selectSlide(
+                            section = section,
+                            slide = slide
+                        )
                     },
+
+                    onAddSlide = { selectedSection ->
+                        context.editor.execute(
+                            AddSlideCommand(selectedSection)
+                        )
+                    },
+
                     onSlideChanged = { slide, text ->
-                        onSongChanged(editor.updateSlideText(song, section, slide, text))
+                        context.editor.execute(
+                            UpdateSlideTextCommand(
+                                section = section,
+                                slide = slide,
+                                oldText = slide.lines.joinToString("\n"),
+                                newText = text
+                            )
+                        )
                     },
-                    onDeleteSlide = { section, slide ->
-                        onSongChanged(editor.deleteSlide(song, section, slide))
+
+                    onDeleteSlide = { selectedSection, slide ->
+                        context.editor.execute(
+                            DeleteSlideCommand(
+                                section = selectedSection,
+                                slide = slide
+                            )
+                        )
                     },
-                    onDuplicateSlide = { section, slide ->
-                        onSongChanged(editor.duplicateSlide(song, section, slide))
+
+                    onDuplicateSlide = { selectedSection, slide ->
+                        context.editor.execute(
+                            DuplicateSlideCommand(
+                                section = selectedSection,
+                                slide = slide
+                            )
+                        )
                     },
-                    onDeleteSection = { section ->
-                        onSongChanged(editor.deleteSection(song, section))
+
+                    onDeleteSection = { selectedSection ->
+                        context.editor.execute(
+                            DeleteSectionCommand(selectedSection)
+                        )
                     },
-                    onDuplicateSection = { section ->
-                        onSongChanged(editor.duplicateSection(song, section))
+
+                    onDuplicateSection = { selectedSection ->
+                        context.editor.execute(
+                            DuplicateSectionCommand(selectedSection)
+                        )
                     }
                 )
+
                 Spacer(Modifier.height(12.dp))
             }
+
             AddSectionButton(
                 onClick = {
                     showAddDialog = true
@@ -86,15 +133,18 @@ fun SongStructurePane(
                 showAddDialog = false
             },
             onCreate = { type ->
-                onAddSection(
-                    SongSection(
-                        type = type,
-                        number = nextSectionNumber(song, type),
-                        slides = listOf(
-                            SongSlide(lines = listOf(""))
+                context.editor.execute(
+                    AddSectionCommand(
+                        SongSection(
+                            type = type,
+                            number = nextSectionNumber(song, type),
+                            slides = listOf(
+                                SongSlide(lines = listOf(""))
+                            )
                         )
                     )
                 )
+
                 showAddDialog = false
             }
         )
@@ -102,13 +152,13 @@ fun SongStructurePane(
 }
 
 private fun nextSectionNumber(
-    song: Song?,
+    song: org.holypresenter_songs.domain.Song?,
     type: SongSectionType
 ): Int {
-    val maxNumber = song
+    return song
         ?.sections
         ?.filter { it.type == type }
         ?.maxOfOrNull { it.number }
-        ?: 0
-    return maxNumber + 1
+        ?.plus(1)
+        ?: 1
 }

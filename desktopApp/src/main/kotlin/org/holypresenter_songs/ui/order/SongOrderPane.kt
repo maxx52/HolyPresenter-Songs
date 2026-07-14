@@ -8,14 +8,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.holypresenter.platform.ui.interaction.dragdrop.HolyReorderColumn
-import org.holypresenter_songs.domain.Song
+import org.holypresenter_songs.domain.editor.command.section.MoveSectionCommand
+import org.holypresenter_songs.presentation.SongEditorContext
 
 @Composable
 fun SongOrderPane(
-    song: Song?,
-    modifier: Modifier = Modifier,
-    onSongChanged: (Song) -> Unit = {}
+    context: SongEditorContext,
+    modifier: Modifier = Modifier
 ) {
+    val song = context.state.song
+    val sections = song?.sections.orEmpty()
+
     Surface(
         modifier = modifier.fillMaxHeight(),
         tonalElevation = 1.dp,
@@ -39,18 +42,15 @@ fun SongOrderPane(
 
             Spacer(Modifier.height(16.dp))
 
-            val sections = song?.sections.orEmpty()
-
             HolyReorderColumn(
                 items = sections,
                 modifier = Modifier.weight(1f),
-                onMove = { from, to ->
-                    val currentSong = song ?: return@HolyReorderColumn
-
-                    val reordered = currentSong.sections.move(from, to)
-
-                    onSongChanged(
-                        currentSong.copy(sections = reordered)
+                onMove = { fromIndex, toIndex ->
+                    context.editor.execute(
+                        MoveSectionCommand(
+                            fromIndex = fromIndex,
+                            toIndex = toIndex
+                        )
                     )
                 }
             ) { section, index, _ ->
@@ -67,14 +67,4 @@ fun SongOrderPane(
             SongOrderDropArea()
         }
     }
-}
-
-private fun <T> List<T>.move(from: Int, to: Int): List<T> {
-    if (from == to) return this
-    if (from !in indices || to !in indices) return this
-
-    val mutable = toMutableList()
-    val item = mutable.removeAt(from)
-    mutable.add(to, item)
-    return mutable
 }

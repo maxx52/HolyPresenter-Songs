@@ -6,6 +6,18 @@ class SongEditCommandStack {
     private val undoStack = ArrayDeque<SongEditCommand>()
     private val redoStack = ArrayDeque<SongEditCommand>()
 
+    val canUndo: Boolean
+        get() = undoStack.isNotEmpty()
+
+    val canRedo: Boolean
+        get() = redoStack.isNotEmpty()
+
+    val undoDescription: String?
+        get() = undoStack.lastOrNull()?.description
+
+    val redoDescription: String?
+        get() = redoStack.lastOrNull()?.description
+
     fun execute(song: Song, command: SongEditCommand): Song {
         val updated = command.execute(song)
         undoStack.addLast(command)
