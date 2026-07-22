@@ -32,14 +32,6 @@ fun SongOrderPane(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Spacer(Modifier.height(4.dp))
-
-            Text(
-                text = "Перетащите блоки для изменения порядка",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline
-            )
-
             Spacer(Modifier.height(16.dp))
 
             HolyReorderColumn(
@@ -63,8 +55,6 @@ fun SongOrderPane(
             }
 
             Spacer(Modifier.height(12.dp))
-
-            SongOrderDropArea()
         }
     }
 }

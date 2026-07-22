@@ -10,14 +10,16 @@ class SongPresentationFactory {
     fun create(song: Song): Presentation {
         return Presentation(
             id = song.id.value,
-            slides = song.sections.mapIndexed { index, section ->
+            slides = song.sections
+                .flatMap { it.slides }
+                .mapIndexed { index, slide ->
                 PresentationSlide(
                     id = "${song.id.value}-slide-$index",
                     elements = listOf(
                         TextElement(
                             id = "${song.id.value}-text-$index",
                             slot = SlotId("lyrics"),
-                            text = section.slides.joinToString("\n")
+                            text = slide.lines.joinToString("\n")
                         )
                     )
                 )

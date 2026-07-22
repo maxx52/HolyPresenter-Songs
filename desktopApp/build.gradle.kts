@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 dependencies {
@@ -12,6 +13,9 @@ dependencies {
     implementation("org.holypresenter:platform-ui:0.1.0")
     implementation(libs.androidx.material3.desktop)
     implementation(libs.androidx.material3.jvmstubs)
+    implementation(libs.androidx.runtime.desktop)
+    implementation(libs.androidx.foundation.layout.desktop)
+    implementation(libs.kotlinxSerializationJson)
 }
 
 tasks.withType<Jar>().configureEach {

@@ -36,9 +36,6 @@ class InMemorySongRepository : SongRepository {
 
     override fun getAll(): List<Song> = songs.toList()
 
-    override fun findById(id: SongId): Song? =
-        songs.firstOrNull { it.id == id }
-
     override fun save(song: Song) {
         val index = songs.indexOfFirst { it.id == song.id }
         if (index >= 0) songs[index] = song else songs += song
@@ -47,4 +44,9 @@ class InMemorySongRepository : SongRepository {
     override fun delete(id: SongId) {
         songs.removeAll { it.id == id }
     }
+
+    override fun findById(id: SongId): Song? =
+        songs.firstOrNull { song ->
+            song.id == id
+        }
 }

@@ -15,7 +15,7 @@ import org.holypresenter_songs.domain.SongTheme
 import org.holypresenter_songs.ui.presentation.background.SongBackgroundLayer
 
 @Composable
-fun SongPreviewSurface(
+fun SongPresentationSurface(
     theme: SongTheme,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit

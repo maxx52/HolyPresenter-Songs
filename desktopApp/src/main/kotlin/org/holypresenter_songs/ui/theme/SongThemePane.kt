@@ -27,12 +27,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.holypresenter_songs.domain.SongBackground
 import org.holypresenter_songs.domain.editor.command.theme.UpdateBackgroundCommand
 import org.holypresenter_songs.domain.editor.command.theme.UpdateFontFamilyCommand
 import org.holypresenter_songs.domain.editor.command.theme.UpdateFontSizeCommand
 import org.holypresenter_songs.domain.editor.command.theme.UpdateOverlayCommand
 import org.holypresenter_songs.presentation.SongEditorContext
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Switch
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
+import org.holypresenter_songs.domain.SongBackground
+import org.holypresenter_songs.domain.editor.command.theme.UpdateOutlineEnabledCommand
+import org.holypresenter_songs.domain.editor.command.theme.UpdateTextColorCommand
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,8 +93,7 @@ fun SongThemePane(
         )
     }
 
-    val fontFamily =
-        song?.theme?.textStyle?.fontFamily ?: "Arial"
+    val fontFamily = song?.theme?.textStyle?.fontFamily ?: "Arial"
 
     Card(
         modifier = modifier.fillMaxHeight()
@@ -99,25 +114,39 @@ fun SongThemePane(
 
             OutlinedButton(
                 onClick = {
-                    val currentSong =
-                        context.state.song ?: return@OutlinedButton
-
-                    val file =
-                        FileChooser.chooseImage() ?: return@OutlinedButton
-
+                    val currentSong = context.state.song ?: return@OutlinedButton
+                    val file = FileChooser.chooseBackground() ?: return@OutlinedButton
+                    val newBackground = file.toSongBackground() ?: return@OutlinedButton
                     context.editor.execute(
                         UpdateBackgroundCommand(
                             oldBackground = currentSong.theme.background,
-                            newBackground = SongBackground.Image(
-                                file.absolutePath
-                            )
+                            newBackground = newBackground
                         )
                     )
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Выбрать изображение")
+                Text("Выбрать фон")
             }
+
+            val backgroundDescription = when (
+                val background = song?.theme?.background
+            ) {
+                null,
+                SongBackground.None -> "Фон не выбран"
+                is SongBackground.Image -> "Изображение: ${File(background.path).name}"
+                is SongBackground.Video -> "Видео: ${File(background.path).name}"
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = backgroundDescription,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
 
             Spacer(Modifier.height(24.dp))
 
@@ -161,8 +190,7 @@ fun SongThemePane(
 
                                 context.editor.execute(
                                     UpdateFontFamilyCommand(
-                                        oldFontFamily =
-                                            currentSong.theme.textStyle.fontFamily,
+                                        oldFontFamily = currentSong.theme.textStyle.fontFamily,
                                         newFontFamily = family
                                     )
                                 )
@@ -176,7 +204,7 @@ fun SongThemePane(
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = "Overlay: ${(overlaySliderValue * 100).toInt()}%"
+                text = "Оверлей: ${(overlaySliderValue * 100).toInt()}%"
             )
 
             Slider(
@@ -188,10 +216,13 @@ fun SongThemePane(
                     }
 
                     overlaySliderValue = newValue
+                    context.state.previewOverlayOpacity = newValue
                 },
+
                 onValueChangeFinished = {
-                    val currentSong = context.state.song ?: return@Slider
                     val newOpacity = overlaySliderValue.coerceIn(0f, 1f)
+
+                    context.state.previewOverlayOpacity = null
 
                     if (newOpacity != overlayStartValue) {
                         context.editor.execute(
@@ -226,7 +257,6 @@ fun SongThemePane(
                     context.state.previewFontSize = newSize
                 },
                 onValueChangeFinished = {
-                    val currentSong = context.state.song ?: return@Slider
                     val newSize = fontSizeSliderValue
                         .toInt()
                         .coerceIn(24, 120)
@@ -244,6 +274,77 @@ fun SongThemePane(
                     fontSizeStartValue = newSize
                 }
             )
+
+            Spacer(Modifier.height(24.dp))
+
+            Text("Цвет текста")
+
+            Spacer(Modifier.height(8.dp))
+
+            val textColors = listOf(
+                0xFFFFFFFF to "Белый",
+                0xFFFFF176 to "Жёлтый",
+                0xFF80DEEA to "Голубой",
+                0xFFA5D6A7 to "Зелёный",
+                0xFFFFAB91 to "Оранжевый"
+            )
+
+            val currentTextColor =
+                song?.theme?.textStyle?.textColor ?: 0xFFFFFFFF
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                textColors.forEach { (colorValue, _) ->
+                    val selected = currentTextColor == colorValue
+
+                    Box(
+                        modifier = Modifier
+                            .size(if (selected) 34.dp else 30.dp)
+                            .clip(CircleShape)
+                            .background(Color(colorValue))
+                            .clickable {
+                                val currentSong = context.state.song ?: return@clickable
+
+                                context.editor.execute(
+                                    UpdateTextColorCommand(
+                                        oldColor = currentSong.theme.textStyle.textColor,
+                                        newColor = colorValue
+                                    )
+                                )
+                            }
+                    )
+                }
+            }
+
+            HorizontalDivider(Modifier.padding(top = 10.dp))
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Контур текста",
+                    modifier = Modifier.weight(1f)
+                )
+
+                Switch(
+                    checked = song?.theme?.textStyle?.outlineEnabled == true,
+                    onCheckedChange = { checked ->
+                        val currentSong = context.state.song ?: return@Switch
+                        context.editor.execute(
+                            UpdateOutlineEnabledCommand(
+                                oldValue = currentSong.theme.textStyle.outlineEnabled,
+                                newValue = checked
+                            )
+                        )
+                    }
+                )
+            }
         }
     }
 }

@@ -29,15 +29,26 @@ fun SongPreviewPane(
         )
     )
 
-    Card(modifier = modifier.fillMaxHeight()) {
-        Column(Modifier.padding(16.dp)) {
-            Text("Предпросмотр", style = MaterialTheme.typography.titleMedium)
+    Card(
+        modifier = modifier.fillMaxHeight()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Предпросмотр",
+                style = MaterialTheme.typography.titleMedium
+            )
+
             Spacer(Modifier.height(12.dp))
 
-            SongPreviewSurface(
-                theme = theme
+            SongPresentationSurface(
+                theme = previewTheme
             ) {
-                SongTextLayer(slide, previewTheme)
+                SongTextLayer(
+                    slide = slide,
+                    theme = previewTheme
+                )
             }
 
             Spacer(Modifier.height(12.dp))
