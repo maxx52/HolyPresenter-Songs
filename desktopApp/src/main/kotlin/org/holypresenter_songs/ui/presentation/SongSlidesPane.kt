@@ -3,12 +3,15 @@ package org.holypresenter_songs.ui.presentation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,10 +23,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import holypresenter.org.platform.api.module.ModuleContext
+import holypresenter.org.platform.api.projection.ProjectionContent
+import holypresenter.org.platform.api.projection.ProjectionService
 import org.holypresenter.platform.ui.presenter.HolyPresenterSectionHeader
 import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.SongSectionType
 import org.holypresenter_songs.domain.SongSlide
+import androidx.compose.runtime.DisposableEffect
+import java.awt.KeyEventDispatcher
+import java.awt.KeyboardFocusManager
+import java.awt.event.KeyEvent
 
 @Composable
 fun SongSlidesPane(
@@ -37,8 +46,103 @@ fun SongSlidesPane(
     ) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val projectionService = remember(moduleContext) {
+        moduleContext.services.get(
+            ProjectionService::class
+        )
+    }
+
+    val slides = remember(song) {
+        song.sections.flatMap { section ->
+            section.slides
+        }
+    }
+
     var selectedSlideIndex by remember(song.id) {
         mutableStateOf<Int?>(null)
+    }
+
+    fun showSlide(index: Int): Boolean {
+        if (slides.isEmpty()) {
+            return false
+        }
+
+        val safeIndex = index.coerceIn(
+            minimumValue = 0,
+            maximumValue = slides.lastIndex
+        )
+
+        selectedSlideIndex = safeIndex
+
+        onSlideClick(
+            slides[safeIndex],
+            safeIndex
+        )
+        return true
+    }
+
+    fun showPreviousSlide(): Boolean {
+        val currentIndex =
+            selectedSlideIndex ?: 0
+
+        return showSlide(
+            index = (currentIndex - 1)
+                .coerceAtLeast(0)
+        )
+    }
+
+    fun showNextSlide(): Boolean {
+        val currentIndex = selectedSlideIndex ?: -1
+
+        return showSlide(
+            index = (currentIndex + 1)
+                .coerceAtMost(slides.lastIndex)
+        )
+    }
+
+    DisposableEffect(
+        song.id,
+        slides.size
+    ) {
+        val keyboardManager = KeyboardFocusManager
+            .getCurrentKeyboardFocusManager()
+
+        val dispatcher = KeyEventDispatcher { event ->
+            if (event.id != KeyEvent.KEY_PRESSED) {
+                return@KeyEventDispatcher false
+            }
+
+            when (event.keyCode) {
+                KeyEvent.VK_RIGHT,
+                KeyEvent.VK_DOWN,
+                KeyEvent.VK_PAGE_DOWN,
+                KeyEvent.VK_SPACE -> {
+                    showNextSlide()
+                }
+
+                KeyEvent.VK_LEFT,
+                KeyEvent.VK_UP,
+                KeyEvent.VK_PAGE_UP -> {
+                    showPreviousSlide()
+                }
+
+                KeyEvent.VK_ESCAPE -> {
+                    projectionService?.close()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        keyboardManager.addKeyEventDispatcher(
+            dispatcher
+        )
+
+        onDispose {
+            keyboardManager.removeKeyEventDispatcher(
+                dispatcher
+            )
+        }
     }
 
     Column(
@@ -51,11 +155,15 @@ fun SongSlidesPane(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            TextButton(onClick = onBackClick) {
+            TextButton(
+                onClick = onBackClick
+            ) {
                 Text("← Библиотека")
             }
 
-            TextButton(onClick = onEditClick) {
+            TextButton(
+                onClick = onEditClick
+            ) {
                 Text("Редактировать")
             }
 
@@ -63,14 +171,89 @@ fun SongSlidesPane(
                 text = song.metadata.title,
                 style = MaterialTheme.typography.titleLarge
             )
+
+            Spacer(
+                modifier = Modifier.weight(1f)
+            )
+
+            Text(
+                text = "← → переключение • Esc закрыть",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            verticalAlignment =
+                Alignment.CenterVertically,
+            horizontalArrangement =
+                Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                enabled = slides.isNotEmpty(),
+                onClick = {
+                    showPreviousSlide()
+                }
+            ) {
+                Text("← Предыдущий")
+            }
+
+            Button(
+                enabled = slides.isNotEmpty(),
+                onClick = {
+                    showNextSlide()
+                }
+            ) {
+                Text("Следующий →")
+            }
+
+            Spacer(
+                modifier = Modifier.weight(1f)
+            )
+
+            OutlinedButton(
+                enabled = projectionService != null,
+                onClick = {
+                    projectionService?.show(
+                        ProjectionContent.BlackScreen
+                    )
+                }
+            ) {
+                Text("Чёрный экран")
+            }
+
+            OutlinedButton(
+                enabled = projectionService != null,
+                onClick = {
+                    projectionService?.clear()
+                }
+            ) {
+                Text("Очистить")
+            }
+
+            OutlinedButton(
+                enabled = projectionService != null,
+                onClick = {
+                    projectionService?.close()
+                }
+            ) {
+                Text("Закрыть проектор")
+            }
         }
 
         HorizontalDivider(
-            modifier = Modifier.padding(vertical = 12.dp)
+            modifier = Modifier.padding(
+                vertical = 12.dp
+            )
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             var globalIndex = 0
@@ -82,7 +265,8 @@ fun SongSlidesPane(
                             type = section.type,
                             number = section.number
                         ),
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier =
+                            Modifier.padding(top = 8.dp)
                     )
                 }
 
@@ -90,20 +274,13 @@ fun SongSlidesPane(
                     val currentIndex = globalIndex
                     globalIndex++
 
-                    item(
-                        key = "${song.id.value}-$currentIndex"
-                    ) {
+                    item(key = "${song.id.value}-$currentIndex") {
                         SongPresenterSlideCard(
                             slide = slide,
                             number = currentIndex + 1,
                             selected = selectedSlideIndex == currentIndex,
                             onClick = {
-                                selectedSlideIndex = currentIndex
-
-                                onSlideClick(
-                                    slide,
-                                    currentIndex
-                                )
+                                showSlide(currentIndex)
                             }
                         )
                     }
