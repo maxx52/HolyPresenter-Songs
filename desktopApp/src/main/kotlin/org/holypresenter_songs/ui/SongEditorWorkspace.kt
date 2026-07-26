@@ -31,7 +31,6 @@ import org.holypresenter_songs.ui.presentation.SongPreviewPane
 import org.holypresenter_songs.ui.structure.SongStructurePane
 import org.holypresenter_songs.ui.theme.SongThemePane
 import org.holypresenter_songs.ui.topbar.SongsTopBar
-import holypresenter.org.platform.api.video.VideoPlaybackService
 import holypresenter.org.platform.api.projection.ProjectionContent
 
 @Composable
@@ -65,12 +64,6 @@ fun SongEditorWorkspace(
         moduleContext.services.get(ProjectionService::class)
     }
 
-    val videoPlaybackService = remember(moduleContext) {
-        moduleContext.services.get(
-            VideoPlaybackService::class
-        )
-    }
-
     val selectedSlide = editorState.selectedSlide
     val song = editorState.song
 
@@ -86,41 +79,6 @@ fun SongEditorWorkspace(
         ) {
             return@LaunchedEffect
         }
-
-        if (
-            videoPlaybackService?.state?.isPlaying != true
-        ) {
-            return@LaunchedEffect
-        }
-
-        val textStyle = currentSong.theme.textStyle
-
-        videoPlaybackService.updateOverlay(
-            VideoOverlayContent(
-                text = selectedSlide
-                    ?.lines
-                    ?.joinToString("\n")
-                    .orEmpty(),
-
-                overlayOpacity =
-                    currentSong.theme.overlay.opacity,
-
-                textColor =
-                    textStyle.textColor,
-
-                fontSize =
-                    textStyle.fontSize,
-
-                bold =
-                    textStyle.bold,
-
-                italic =
-                    textStyle.italic,
-
-                outlineEnabled =
-                    textStyle.outlineEnabled
-            )
-        )
     }
 
     LaunchedEffect(songId) {
@@ -129,19 +87,46 @@ fun SongEditorWorkspace(
         )
     }
 
-    LaunchedEffect(editorState.song, editorState.selectedSlide) {
-        val currentSong = editorState.song
-        val selectedSlide = editorState.selectedSlide
+    LaunchedEffect(
+        editorState.song,
+        editorState.selectedSlide
+    ) {
+        val service = projectionService
+                ?: return@LaunchedEffect
 
-        if (
-            currentSong != null &&
-            selectedSlide != null &&
-            videoPlaybackService?.state?.status == VideoPlaybackStatus.PLAYING
-        ) {
-            videoPlaybackService.updateOverlay(
-                currentSong.videoOverlayContent(selectedSlide)
-            )
+        val currentSong = editorState.song
+                ?: return@LaunchedEffect
+
+        val selectedSlide = editorState.selectedSlide
+                ?: return@LaunchedEffect
+
+        val projectionState = service.state.value
+
+        if (!projectionState.visible) {
+            return@LaunchedEffect
         }
+
+        val currentContent = projectionState.content
+                as? ProjectionContent.Slide
+                ?: return@LaunchedEffect
+
+        /*
+         * Автоматически переключаем слайды только тогда,
+         * когда на проектор уже выведена именно эта песня.
+         *
+         * Простое открытие редактора ничего не отправляет
+         * на экран.
+         */
+        if (currentContent.presentation.id != currentSong.id.value) {
+            return@LaunchedEffect
+        }
+
+        val slideIndex = currentSong.slideIndex(selectedSlide)
+                ?: return@LaunchedEffect
+
+        val presentation = presentationFactory.create(currentSong)
+
+        service.show(ProjectionContent.Slide(presentation, slideIndex))
     }
 
     Column(
@@ -176,52 +161,25 @@ fun SongEditorWorkspace(
                 context = editorContext,
                 modifier = Modifier.weight(0.32f),
                 onShowClick = {
-                    val currentSong = editorState.song ?: return@SongPreviewPane
-                    val selectedSlide = editorState.selectedSlide
-                        ?: return@SongPreviewPane
+                    val currentSong = editorState.song
+                            ?: return@SongPreviewPane
 
-                    val slideIndex =
-                        currentSong.slideIndex(selectedSlide)
+                    val selectedSlide = editorState.selectedSlide
+                            ?: return@SongPreviewPane
+
+                    val slideIndex = currentSong.slideIndex(selectedSlide)
                             ?: return@SongPreviewPane
 
                     val presentation = presentationFactory.create(currentSong)
 
-                    when (
-                        val background = currentSong.theme.background
-                    ) {
-                        is SongBackground.Video -> {
-                            /*
-                             * Обычное окно проекции закрываем,
-                             * чтобы оно не перекрыло окно VLC.
-                             */
-                            projectionService?.close()
-
-                            videoPlaybackService?.updateOverlay(
-                                currentSong.videoOverlayContent(
-                                    selectedSlide
-                                )
-                            )
-
-                            videoPlaybackService?.play(
-                                path = background.path,
-                                loop = true,
-                                muted = true
-                            )
-                        }
-
-                        else -> {
-                            videoPlaybackService?.stop()
-                            projectionService?.show(
-                                ProjectionContent.Slide(
-                                    presentation = presentation,
-                                    slideIndex = slideIndex
-                                )
-                            )
-                        }
-                    }
+                    projectionService?.show(
+                        ProjectionContent.Slide(
+                            presentation = presentation,
+                            slideIndex = slideIndex
+                        )
+                    )
                 }
             )
-
             SongThemePane(
                 context = editorContext,
                 modifier = Modifier.weight(0.18f)
@@ -229,21 +187,6 @@ fun SongEditorWorkspace(
         }
     }
 }
-
-private fun Song.videoOverlayContent(
-    slide: SongSlide
-): VideoOverlayContent =
-    VideoOverlayContent(
-        text = slide.lines.joinToString("\n"),
-        overlayOpacity = if (theme.overlay.enabled) theme.overlay.opacity else 0f,
-        textColor = theme.textStyle.textColor,
-        fontFamily = theme.textStyle.fontFamily,
-        fontSize = theme.textStyle.fontSize,
-        bold = theme.textStyle.bold,
-        italic = theme.textStyle.italic,
-        outlineEnabled = theme.textStyle.outlineEnabled,
-        shadowEnabled = theme.textStyle.shadowEnabled
-    )
 
 private fun Song.slideIndex(slide: SongSlide): Int? =
     sections
