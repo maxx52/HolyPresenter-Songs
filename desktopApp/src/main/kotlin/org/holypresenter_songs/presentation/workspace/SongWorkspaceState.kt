@@ -6,7 +6,10 @@ import androidx.compose.runtime.setValue
 import org.holypresenter_songs.domain.SongId
 
 class SongWorkspaceState {
-    var screen: SongScreen by mutableStateOf(SongScreen.LIBRARY)
+
+    var screen: SongScreen by mutableStateOf(
+        SongScreen.LIBRARY
+    )
         private set
 
     var selectedSongId: SongId? by mutableStateOf(null)
@@ -20,5 +23,10 @@ class SongWorkspaceState {
     fun openEditor(songId: SongId) {
         selectedSongId = songId
         screen = SongScreen.EDITOR
+    }
+
+    fun openPresenter(songId: SongId) {
+        selectedSongId = songId
+        screen = SongScreen.PRESENTER
     }
 }

@@ -15,7 +15,8 @@ fun SongLibraryWorkspace(
     repository: SongRepository,
     selectedSongId: SongId?,
     onCreateSong: () -> Unit,
-    onOpenSong: (SongId) -> Unit
+    onOpenSong: (SongId) -> Unit,
+    onPresentSong: (SongId) -> Unit
 ) {
     val plannerService = remember(moduleContext) {
         moduleContext.services.get(
@@ -33,10 +34,20 @@ fun SongLibraryWorkspace(
                 onOpenSong = onOpenSong
             )
         },
-
         right = {
             PlannerSidePane(
-                plannerService = plannerService
+                plannerService = plannerService,
+                onItemClick = { item, _ ->
+                    if (
+                        item.reference.moduleId == "songs"
+                    ) {
+                        onPresentSong(
+                            SongId(
+                                item.reference.itemId
+                            )
+                        )
+                    }
+                }
             )
         }
     )

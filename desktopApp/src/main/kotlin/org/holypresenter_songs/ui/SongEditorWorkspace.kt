@@ -32,6 +32,7 @@ import org.holypresenter_songs.ui.structure.SongStructurePane
 import org.holypresenter_songs.ui.theme.SongThemePane
 import org.holypresenter_songs.ui.topbar.SongsTopBar
 import holypresenter.org.platform.api.video.VideoPlaybackService
+import holypresenter.org.platform.api.projection.ProjectionContent
 
 @Composable
 fun SongEditorWorkspace(
@@ -67,6 +68,58 @@ fun SongEditorWorkspace(
     val videoPlaybackService = remember(moduleContext) {
         moduleContext.services.get(
             VideoPlaybackService::class
+        )
+    }
+
+    val selectedSlide = editorState.selectedSlide
+    val song = editorState.song
+
+    LaunchedEffect(
+        selectedSlide,
+        song?.theme
+    ) {
+        val currentSong = song ?: return@LaunchedEffect
+
+        if (
+            currentSong.theme.background
+                    !is SongBackground.Video
+        ) {
+            return@LaunchedEffect
+        }
+
+        if (
+            videoPlaybackService?.state?.isPlaying != true
+        ) {
+            return@LaunchedEffect
+        }
+
+        val textStyle = currentSong.theme.textStyle
+
+        videoPlaybackService.updateOverlay(
+            VideoOverlayContent(
+                text = selectedSlide
+                    ?.lines
+                    ?.joinToString("\n")
+                    .orEmpty(),
+
+                overlayOpacity =
+                    currentSong.theme.overlay.opacity,
+
+                textColor =
+                    textStyle.textColor,
+
+                fontSize =
+                    textStyle.fontSize,
+
+                bold =
+                    textStyle.bold,
+
+                italic =
+                    textStyle.italic,
+
+                outlineEnabled =
+                    textStyle.outlineEnabled
+            )
         )
     }
 
@@ -127,26 +180,44 @@ fun SongEditorWorkspace(
                     val selectedSlide = editorState.selectedSlide
                         ?: return@SongPreviewPane
 
-                    when (val background = currentSong.theme.background) {
+                    val slideIndex =
+                        currentSong.slideIndex(selectedSlide)
+                            ?: return@SongPreviewPane
+
+                    val presentation = presentationFactory.create(currentSong)
+
+                    when (
+                        val background = currentSong.theme.background
+                    ) {
                         is SongBackground.Video -> {
+                            /*
+                             * Обычное окно проекции закрываем,
+                             * чтобы оно не перекрыло окно VLC.
+                             */
+                            projectionService?.close()
+
                             videoPlaybackService?.updateOverlay(
-                                currentSong.videoOverlayContent(selectedSlide)
+                                currentSong.videoOverlayContent(
+                                    selectedSlide
+                                )
                             )
+
                             videoPlaybackService?.play(
                                 path = background.path,
                                 loop = true,
                                 muted = true
                             )
                         }
+
                         else -> {
                             videoPlaybackService?.stop()
+                            projectionService?.show(
+                                ProjectionContent.Slide(
+                                    presentation = presentation,
+                                    slideIndex = slideIndex
+                                )
+                            )
                         }
-                    }
-
-                    val presentation = presentationFactory.create(currentSong)
-                    projectionService?.present(presentation)
-                    currentSong.slideIndex(selectedSlide)?.let { index ->
-                        projectionService?.goTo(index)
                     }
                 }
             )
