@@ -30,6 +30,7 @@ import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.SongSectionType
 import org.holypresenter_songs.domain.SongSlide
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import java.awt.KeyEventDispatcher
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
@@ -51,6 +52,14 @@ fun SongSlidesPane(
             ProjectionService::class
         )
     }
+
+    val projectionState = projectionService
+        ?.state
+        ?.collectAsState()
+
+    val isBlackScreen = projectionState
+        ?.value
+        ?.content == ProjectionContent.BlackScreen
 
     val slides = remember(song) {
         song.sections.flatMap { section ->
@@ -130,6 +139,11 @@ fun SongSlidesPane(
                     projectionService?.close()
                     true
                 }
+
+                KeyEvent.VK_B -> {
+                    projectionService?.toggleBlackScreen()
+                    true
+                }
                 else -> false
             }
         }
@@ -177,7 +191,7 @@ fun SongSlidesPane(
             )
 
             Text(
-                text = "← → переключение • Esc закрыть",
+                text = "← → слайды • \"B\" экран • Esc закрыть",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -217,12 +231,16 @@ fun SongSlidesPane(
             OutlinedButton(
                 enabled = projectionService != null,
                 onClick = {
-                    projectionService?.show(
-                        ProjectionContent.BlackScreen
-                    )
+                    projectionService?.toggleBlackScreen()
                 }
             ) {
-                Text("Чёрный экран")
+                Text(
+                    if (isBlackScreen) {
+                        "Вернуть изображение"
+                    } else {
+                        "Чёрный экран"
+                    }
+                )
             }
 
             OutlinedButton(
