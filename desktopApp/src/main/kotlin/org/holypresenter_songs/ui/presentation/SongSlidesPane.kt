@@ -61,6 +61,11 @@ fun SongSlidesPane(
         ?.value
         ?.content == ProjectionContent.BlackScreen
 
+    val isTextHidden =
+        projectionState
+            ?.value
+            ?.textVisible == false
+
     val slides = remember(song) {
         song.sections.flatMap { section ->
             section.slides
@@ -144,6 +149,13 @@ fun SongSlidesPane(
                     projectionService?.toggleBlackScreen()
                     true
                 }
+
+                KeyEvent.VK_C -> {
+                    projectionService
+                        ?.toggleTextVisibility()
+
+                    true
+                }
                 else -> false
             }
         }
@@ -191,7 +203,7 @@ fun SongSlidesPane(
             )
 
             Text(
-                text = "← → слайды • \"B\" экран • Esc закрыть",
+                text = "← → слайды • B экран • C текст • Esc закрыть",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -246,10 +258,16 @@ fun SongSlidesPane(
             OutlinedButton(
                 enabled = projectionService != null,
                 onClick = {
-                    projectionService?.clear()
+                    projectionService?.toggleTextVisibility()
                 }
             ) {
-                Text("Очистить")
+                Text(
+                    if (isTextHidden) {
+                        "Вернуть текст"
+                    } else {
+                        "Скрыть текст"
+                    }
+                )
             }
 
             OutlinedButton(
