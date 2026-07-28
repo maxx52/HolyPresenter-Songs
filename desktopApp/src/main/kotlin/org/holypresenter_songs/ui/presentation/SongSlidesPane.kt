@@ -34,6 +34,7 @@ import androidx.compose.runtime.collectAsState
 import java.awt.KeyEventDispatcher
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
+import org.holypresenter.platform.ui.presenter.HolyProjectionControls
 
 @Composable
 fun SongSlidesPane(
@@ -240,44 +241,23 @@ fun SongSlidesPane(
                 modifier = Modifier.weight(1f)
             )
 
-            OutlinedButton(
+            HolyProjectionControls(
+                isBlackScreen = isBlackScreen,
+                isTextHidden = isTextHidden,
                 enabled = projectionService != null,
-                onClick = {
-                    projectionService?.toggleBlackScreen()
+                onToggleBlackScreen = {
+                    projectionService
+                        ?.toggleBlackScreen()
+                },
+                onToggleTextVisibility = {
+                    projectionService
+                        ?.toggleTextVisibility()
+                },
+                onCloseProjection = {
+                    projectionService
+                        ?.close()
                 }
-            ) {
-                Text(
-                    if (isBlackScreen) {
-                        "Вернуть изображение"
-                    } else {
-                        "Чёрный экран"
-                    }
-                )
-            }
-
-            OutlinedButton(
-                enabled = projectionService != null,
-                onClick = {
-                    projectionService?.toggleTextVisibility()
-                }
-            ) {
-                Text(
-                    if (isTextHidden) {
-                        "Вернуть текст"
-                    } else {
-                        "Скрыть текст"
-                    }
-                )
-            }
-
-            OutlinedButton(
-                enabled = projectionService != null,
-                onClick = {
-                    projectionService?.close()
-                }
-            ) {
-                Text("Закрыть проектор")
-            }
+            )
         }
 
         HorizontalDivider(

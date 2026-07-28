@@ -10,7 +10,7 @@ dependencies {
     implementation(libs.kotlinx.coroutinesSwing)
     implementation(libs.compose.uiToolingPreview)
     implementation("org.holypresenter:platform-api:0.3.0")
-    implementation("org.holypresenter:platform-ui:0.1.0")
+    implementation("org.holypresenter:platform-ui:0.2.0")
     implementation(libs.androidx.material3.desktop)
     implementation(libs.androidx.material3.jvmstubs)
     implementation(libs.androidx.runtime.desktop)
@@ -23,17 +23,35 @@ tasks.withType<Jar>().configureEach {
     archiveVersion.set("")
 }
 
-val holyPresenterModulesDir = file("D:/Idea/HolyPresenter/desktopApp/modules")
+val holyPresenterModulesDir =
+    file("D:/Idea/HolyPresenter/desktopApp/modules")
 
-tasks.register<Copy>("installModule") {
+val cleanOldPlatformUi by tasks.registering(Delete::class) {
     description = "Copies the Songs module into HolyPresenter"
-    from(tasks.named<Jar>("jar").flatMap { it.archiveFile })
+    delete(
+        fileTree(holyPresenterModulesDir) {
+            include("platform-ui-*.jar")
+        }
+    )
+}
+
+val installModule by tasks.registering(Copy::class) {
+    description = "Copies the Songs module into HolyPresenter"
+
+    dependsOn(cleanOldPlatformUi)
+
+    from(
+        tasks.named<Jar>("jar")
+            .flatMap { it.archiveFile }
+    )
+
     from(configurations.runtimeClasspath) {
-        include("platform-ui-0.1.0.jar")
+        include("platform-ui-*.jar")
     }
+
     into(holyPresenterModulesDir)
 }
 
-tasks.named("jar") {
-    finalizedBy("installModule")
+tasks.named<Jar>("jar") {
+    finalizedBy(installModule)
 }
