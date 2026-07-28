@@ -10,7 +10,7 @@ dependencies {
     implementation(libs.kotlinx.coroutinesSwing)
     implementation(libs.compose.uiToolingPreview)
     implementation("org.holypresenter:platform-api:0.3.0")
-    implementation("org.holypresenter:platform-ui:0.2.0")
+    implementation("org.holypresenter:platform-ui:0.3.0")
     implementation(libs.androidx.material3.desktop)
     implementation(libs.androidx.material3.jvmstubs)
     implementation(libs.androidx.runtime.desktop)

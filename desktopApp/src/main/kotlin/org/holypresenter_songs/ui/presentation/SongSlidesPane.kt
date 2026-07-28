@@ -35,6 +35,7 @@ import java.awt.KeyEventDispatcher
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
 import org.holypresenter.platform.ui.presenter.HolyProjectionControls
+import org.holypresenter.platform.ui.presenter.HolyProjectionShortcutsHint
 
 @Composable
 fun SongSlidesPane(
@@ -203,11 +204,7 @@ fun SongSlidesPane(
                 modifier = Modifier.weight(1f)
             )
 
-            Text(
-                text = "← → слайды • B экран • C текст • Esc закрыть",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            HolyProjectionShortcutsHint()
         }
 
         Row(
