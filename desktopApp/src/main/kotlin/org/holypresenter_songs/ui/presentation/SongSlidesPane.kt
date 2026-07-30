@@ -36,6 +36,7 @@ import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
 import org.holypresenter.platform.ui.presenter.HolyProjectionControls
 import org.holypresenter.platform.ui.presenter.HolyProjectionShortcutsHint
+import org.holypresenter.platform.ui.presenter.HolyProjectionToolbar
 
 @Composable
 fun SongSlidesPane(
@@ -203,18 +204,14 @@ fun SongSlidesPane(
             Spacer(
                 modifier = Modifier.weight(1f)
             )
-
-            HolyProjectionShortcutsHint()
         }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp),
-            verticalAlignment =
-                Alignment.CenterVertically,
-            horizontalArrangement =
-                Arrangement.spacedBy(8.dp)
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(
                 enabled = slides.isNotEmpty(),
@@ -238,7 +235,7 @@ fun SongSlidesPane(
                 modifier = Modifier.weight(1f)
             )
 
-            HolyProjectionControls(
+            HolyProjectionToolbar(
                 isBlackScreen = isBlackScreen,
                 isTextHidden = isTextHidden,
                 enabled = projectionService != null,
