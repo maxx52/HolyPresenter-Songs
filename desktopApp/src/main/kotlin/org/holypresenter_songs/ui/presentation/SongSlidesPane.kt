@@ -15,6 +15,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,17 +28,13 @@ import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.projection.ProjectionContent
 import holypresenter.org.platform.api.projection.ProjectionService
 import org.holypresenter.platform.ui.presenter.HolyPresenterSectionHeader
+import org.holypresenter.platform.ui.presenter.HolyProjectionToolbar
 import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.SongSectionType
 import org.holypresenter_songs.domain.SongSlide
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import java.awt.KeyEventDispatcher
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
-import org.holypresenter.platform.ui.presenter.HolyProjectionControls
-import org.holypresenter.platform.ui.presenter.HolyProjectionShortcutsHint
-import org.holypresenter.platform.ui.presenter.HolyProjectionToolbar
 
 @Composable
 fun SongSlidesPane(
@@ -60,9 +58,10 @@ fun SongSlidesPane(
         ?.state
         ?.collectAsState()
 
-    val isBlackScreen = projectionState
-        ?.value
-        ?.content == ProjectionContent.BlackScreen
+    val isBlackScreen =
+        projectionState
+            ?.value
+            ?.content == ProjectionContent.BlackScreen
 
     val isTextHidden =
         projectionState
@@ -95,6 +94,7 @@ fun SongSlidesPane(
             slides[safeIndex],
             safeIndex
         )
+
         return true
     }
 
@@ -109,7 +109,8 @@ fun SongSlidesPane(
     }
 
     fun showNextSlide(): Boolean {
-        val currentIndex = selectedSlideIndex ?: -1
+        val currentIndex =
+            selectedSlideIndex ?: -1
 
         return showSlide(
             index = (currentIndex + 1)
@@ -121,47 +122,55 @@ fun SongSlidesPane(
         song.id,
         slides.size
     ) {
-        val keyboardManager = KeyboardFocusManager
-            .getCurrentKeyboardFocusManager()
+        val keyboardManager =
+            KeyboardFocusManager
+                .getCurrentKeyboardFocusManager()
 
-        val dispatcher = KeyEventDispatcher { event ->
-            if (event.id != KeyEvent.KEY_PRESSED) {
-                return@KeyEventDispatcher false
+        val dispatcher =
+            KeyEventDispatcher { event ->
+                if (
+                    event.id !=
+                    KeyEvent.KEY_PRESSED
+                ) {
+                    return@KeyEventDispatcher false
+                }
+
+                when (event.keyCode) {
+                    KeyEvent.VK_RIGHT,
+                    KeyEvent.VK_DOWN,
+                    KeyEvent.VK_PAGE_DOWN,
+                    KeyEvent.VK_SPACE -> {
+                        showNextSlide()
+                    }
+
+                    KeyEvent.VK_LEFT,
+                    KeyEvent.VK_UP,
+                    KeyEvent.VK_PAGE_UP -> {
+                        showPreviousSlide()
+                    }
+
+                    KeyEvent.VK_ESCAPE -> {
+                        projectionService?.close()
+                        true
+                    }
+
+                    KeyEvent.VK_B -> {
+                        projectionService
+                            ?.toggleBlackScreen()
+
+                        true
+                    }
+
+                    KeyEvent.VK_C -> {
+                        projectionService
+                            ?.toggleTextVisibility()
+
+                        true
+                    }
+
+                    else -> false
+                }
             }
-
-            when (event.keyCode) {
-                KeyEvent.VK_RIGHT,
-                KeyEvent.VK_DOWN,
-                KeyEvent.VK_PAGE_DOWN,
-                KeyEvent.VK_SPACE -> {
-                    showNextSlide()
-                }
-
-                KeyEvent.VK_LEFT,
-                KeyEvent.VK_UP,
-                KeyEvent.VK_PAGE_UP -> {
-                    showPreviousSlide()
-                }
-
-                KeyEvent.VK_ESCAPE -> {
-                    projectionService?.close()
-                    true
-                }
-
-                KeyEvent.VK_B -> {
-                    projectionService?.toggleBlackScreen()
-                    true
-                }
-
-                KeyEvent.VK_C -> {
-                    projectionService
-                        ?.toggleTextVisibility()
-
-                    true
-                }
-                else -> false
-            }
-        }
 
         keyboardManager.addKeyEventDispatcher(
             dispatcher
@@ -181,8 +190,10 @@ fun SongSlidesPane(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            verticalAlignment =
+                Alignment.CenterVertically,
+            horizontalArrangement =
+                Arrangement.spacedBy(8.dp)
         ) {
             TextButton(
                 onClick = onBackClick
@@ -198,7 +209,8 @@ fun SongSlidesPane(
 
             Text(
                 text = song.metadata.title,
-                style = MaterialTheme.typography.titleLarge
+                style =
+                    MaterialTheme.typography.titleLarge
             )
 
             Spacer(
@@ -210,8 +222,10 @@ fun SongSlidesPane(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            verticalAlignment =
+                Alignment.CenterVertically,
+            horizontalArrangement =
+                Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(
                 enabled = slides.isNotEmpty(),
@@ -230,7 +244,14 @@ fun SongSlidesPane(
             ) {
                 Text("Следующий →")
             }
+        }
 
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Spacer(
                 modifier = Modifier.weight(1f)
             )
@@ -239,6 +260,7 @@ fun SongSlidesPane(
                 isBlackScreen = isBlackScreen,
                 isTextHidden = isTextHidden,
                 enabled = projectionService != null,
+                compact = false,
                 onToggleBlackScreen = {
                     projectionService
                         ?.toggleBlackScreen()
@@ -264,7 +286,8 @@ fun SongSlidesPane(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement =
+                Arrangement.spacedBy(12.dp)
         ) {
             var globalIndex = 0
 
@@ -284,11 +307,16 @@ fun SongSlidesPane(
                     val currentIndex = globalIndex
                     globalIndex++
 
-                    item(key = "${song.id.value}-$currentIndex") {
+                    item(
+                        key =
+                            "${song.id.value}-$currentIndex"
+                    ) {
                         SongPresenterSlideCard(
                             slide = slide,
                             number = currentIndex + 1,
-                            selected = selectedSlideIndex == currentIndex,
+                            selected =
+                                selectedSlideIndex ==
+                                        currentIndex,
                             onClick = {
                                 showSlide(currentIndex)
                             }
