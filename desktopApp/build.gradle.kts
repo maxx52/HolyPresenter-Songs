@@ -9,7 +9,7 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutinesSwing)
     implementation(libs.compose.uiToolingPreview)
-    implementation("org.holypresenter:platform-api:0.4.0")
+    implementation("org.holypresenter:platform-api:0.5.0")
     implementation("org.holypresenter:platform-ui:0.5.0")
     implementation(libs.androidx.material3.desktop)
     implementation(libs.androidx.material3.jvmstubs)
