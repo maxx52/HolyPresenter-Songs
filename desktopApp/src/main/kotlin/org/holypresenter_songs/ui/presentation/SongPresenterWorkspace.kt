@@ -15,7 +15,7 @@ import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.SongId
 import org.holypresenter_songs.domain.SongSlide
 import org.holypresenter_songs.repository.SongRepository
-import org.holypresenter_songs.ui.PlannerSidePane
+import org.holypresenter.platform.ui.planner.PlannerSidePane
 
 @Composable
 fun SongPresenterWorkspace(

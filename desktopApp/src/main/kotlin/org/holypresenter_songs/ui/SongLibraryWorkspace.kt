@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.planner.PlannerService
+import org.holypresenter.platform.ui.planner.PlannerSidePane
 import org.holypresenter.platform.ui.workspace.HolyWorkspace
 import org.holypresenter_songs.domain.SongId
 import org.holypresenter_songs.repository.SongRepository
