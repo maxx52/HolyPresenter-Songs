@@ -9,7 +9,7 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutinesSwing)
     implementation(libs.compose.uiToolingPreview)
-    implementation("org.holypresenter:platform-api:0.3.0")
+    implementation("org.holypresenter:platform-api:0.4.0")
     implementation("org.holypresenter:platform-ui:0.5.0")
     implementation(libs.androidx.material3.desktop)
     implementation(libs.androidx.material3.jvmstubs)
@@ -23,8 +23,7 @@ tasks.withType<Jar>().configureEach {
     archiveVersion.set("")
 }
 
-val holyPresenterModulesDir =
-    file("D:/Idea/HolyPresenter/desktopApp/modules")
+val holyPresenterModulesDir = file("D:/Idea/HolyPresenter/desktopApp/modules")
 
 val cleanOldPlatformUi by tasks.registering(Delete::class) {
     description = "Copies the Songs module into HolyPresenter"

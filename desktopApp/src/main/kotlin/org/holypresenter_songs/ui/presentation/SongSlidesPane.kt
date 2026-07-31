@@ -1,6 +1,7 @@
 package org.holypresenter_songs.ui.presentation
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -227,53 +228,93 @@ fun SongSlidesPane(
             horizontalArrangement =
                 Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedButton(
-                enabled = slides.isNotEmpty(),
-                onClick = {
-                    showPreviousSlide()
-                }
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
             ) {
-                Text("← Предыдущий")
-            }
+                val useSingleRow = maxWidth >= 980.dp
 
-            Button(
-                enabled = slides.isNotEmpty(),
-                onClick = {
-                    showNextSlide()
+                if (useSingleRow) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement =
+                            Arrangement.spacedBy(8.dp)
+                    ) {
+                        SlideNavigationControls(
+                            enabled = slides.isNotEmpty(),
+                            onPrevious = {
+                                showPreviousSlide()
+                            },
+                            onNext = {
+                                showNextSlide()
+                            }
+                        )
+
+                        Spacer(
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        HolyProjectionToolbar(
+                            isBlackScreen = isBlackScreen,
+                            isTextHidden = isTextHidden,
+                            enabled = projectionService != null,
+                            compact = false,
+                            onToggleBlackScreen = {
+                                projectionService
+                                    ?.toggleBlackScreen()
+                            },
+                            onToggleTextVisibility = {
+                                projectionService
+                                    ?.toggleTextVisibility()
+                            },
+                            onCloseProjection = {
+                                projectionService
+                                    ?.close()
+                            }
+                        )
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement =
+                            Arrangement.spacedBy(8.dp)
+                    ) {
+                        SlideNavigationControls(
+                            enabled = slides.isNotEmpty(),
+                            onPrevious = {
+                                showPreviousSlide()
+                            },
+                            onNext = {
+                                showNextSlide()
+                            }
+                        )
+
+                        HolyProjectionToolbar(
+                            isBlackScreen = isBlackScreen,
+                            isTextHidden = isTextHidden,
+                            enabled = projectionService != null,
+                            compact = false,
+                            modifier = Modifier.align(
+                                Alignment.End
+                            ),
+                            onToggleBlackScreen = {
+                                projectionService
+                                    ?.toggleBlackScreen()
+                            },
+                            onToggleTextVisibility = {
+                                projectionService
+                                    ?.toggleTextVisibility()
+                            },
+                            onCloseProjection = {
+                                projectionService
+                                    ?.close()
+                            }
+                        )
+                    }
                 }
-            ) {
-                Text("Следующий →")
             }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Spacer(
-                modifier = Modifier.weight(1f)
-            )
-
-            HolyProjectionToolbar(
-                isBlackScreen = isBlackScreen,
-                isTextHidden = isTextHidden,
-                enabled = projectionService != null,
-                compact = false,
-                onToggleBlackScreen = {
-                    projectionService
-                        ?.toggleBlackScreen()
-                },
-                onToggleTextVisibility = {
-                    projectionService
-                        ?.toggleTextVisibility()
-                },
-                onCloseProjection = {
-                    projectionService
-                        ?.close()
-                }
-            )
         }
 
         HorizontalDivider(
@@ -324,6 +365,44 @@ fun SongSlidesPane(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SlideNavigationControls(
+    enabled: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment =
+            Alignment.CenterVertically,
+        horizontalArrangement =
+            Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedButton(
+            enabled = enabled,
+            onClick = onPrevious
+        ) {
+            Text(
+                text = "← Предыдущий",
+                maxLines = 1,
+                softWrap = false
+            )
+        }
+
+        Button(
+            enabled = enabled,
+            onClick = onNext
+        ) {
+            Text(
+                text = "Следующий →",
+                maxLines = 1,
+                softWrap = false
+            )
         }
     }
 }

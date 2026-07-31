@@ -70,8 +70,16 @@ fun SongPresenterWorkspace(
                 plannerService = plannerService,
                 modifier = Modifier.fillMaxSize(),
                 onItemClick = { item, index ->
-                    plannerService?.setActive(index)
-                    onPlannerItemClick(item, index)
+                    val currentActiveIndex = plannerService
+                        ?.state
+                        ?.activeItemIndex
+
+                    if (currentActiveIndex == index) {
+                        plannerService.clearActive()
+                    } else {
+                        plannerService?.setActive(index)
+                        onPlannerItemClick(item, index)
+                    }
                 }
             )
         }
