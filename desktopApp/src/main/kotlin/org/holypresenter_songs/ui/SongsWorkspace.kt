@@ -9,6 +9,7 @@ import org.holypresenter_songs.domain.SongId
 import org.holypresenter_songs.domain.factory.SongFactory
 import org.holypresenter_songs.presentation.SongPresentationFactory
 import org.holypresenter_songs.presentation.workspace.SongScreen
+import org.holypresenter_songs.presentation.workspace.SongWorkspaceState
 import org.holypresenter_songs.presentation.workspace.rememberSongWorkspaceState
 import org.holypresenter_songs.repository.SongRepository
 import org.holypresenter_songs.ui.presentation.SongPresenterWorkspace
@@ -16,10 +17,9 @@ import org.holypresenter_songs.ui.presentation.SongPresenterWorkspace
 @Composable
 fun SongsWorkspace(
     moduleContext: ModuleContext,
-    repository: SongRepository
+    repository: SongRepository,
+    workspaceState: SongWorkspaceState
 ) {
-    val workspaceState = rememberSongWorkspaceState()
-
     val projectionService = remember(moduleContext) {
         moduleContext.services.get(
             ProjectionService::class
