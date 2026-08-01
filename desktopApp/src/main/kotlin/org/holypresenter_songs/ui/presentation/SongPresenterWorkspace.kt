@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.planner.PlannerItem
+import holypresenter.org.platform.api.planner.PlannerItemHandlerRegistry
 import holypresenter.org.platform.api.planner.PlannerService
 import org.holypresenter.platform.ui.workspace.HolyWorkspace
 import org.holypresenter_songs.domain.Song
@@ -22,7 +23,6 @@ fun SongPresenterWorkspace(
     moduleContext: ModuleContext,
     repository: SongRepository,
     songId: SongId,
-    onPlannerItemClick: (item: PlannerItem, index: Int) -> Unit,
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
     onSlideClick: (song: Song, slide: SongSlide, globalIndex: Int) -> Unit
@@ -32,6 +32,13 @@ fun SongPresenterWorkspace(
             PlannerService::class
         )
     }
+
+    val plannerItemHandlerRegistry =
+        remember(moduleContext) {
+            moduleContext.services.get(
+                PlannerItemHandlerRegistry::class
+            )
+        }
 
     val song = remember(songId) {
         repository.findById(songId)
@@ -70,15 +77,16 @@ fun SongPresenterWorkspace(
                 plannerService = plannerService,
                 modifier = Modifier.fillMaxSize(),
                 onItemClick = { item, index ->
-                    val currentActiveIndex = plannerService
-                        ?.state
-                        ?.activeItemIndex
+                    val currentActiveIndex = plannerService?.state?.activeItemIndex
 
                     if (currentActiveIndex == index) {
                         plannerService.clearActive()
                     } else {
-                        plannerService?.setActive(index)
-                        onPlannerItemClick(item, index)
+                        val activated = plannerItemHandlerRegistry?.activate(item) == true
+
+                        if (activated) {
+                            plannerService?.setActive(index)
+                        }
                     }
                 }
             )

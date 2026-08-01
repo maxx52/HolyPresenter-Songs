@@ -5,12 +5,10 @@ import androidx.compose.runtime.remember
 import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.projection.ProjectionContent
 import holypresenter.org.platform.api.projection.ProjectionService
-import org.holypresenter_songs.domain.SongId
 import org.holypresenter_songs.domain.factory.SongFactory
 import org.holypresenter_songs.presentation.SongPresentationFactory
 import org.holypresenter_songs.presentation.workspace.SongScreen
 import org.holypresenter_songs.presentation.workspace.SongWorkspaceState
-import org.holypresenter_songs.presentation.workspace.rememberSongWorkspaceState
 import org.holypresenter_songs.repository.SongRepository
 import org.holypresenter_songs.ui.presentation.SongPresenterWorkspace
 
@@ -44,9 +42,6 @@ fun SongsWorkspace(
                 },
                 onOpenSong = { songId ->
                     workspaceState.openEditor(songId)
-                },
-                onPresentSong = { songId ->
-                    workspaceState.openPresenter(songId)
                 }
             )
         }
@@ -70,23 +65,12 @@ fun SongsWorkspace(
                     moduleContext = moduleContext,
                     repository = repository,
                     songId = songId,
-
-                    onPlannerItemClick = { item, _ ->
-                        if (item.reference.moduleId == "songs") {
-                            workspaceState.openPresenter(
-                                SongId(item.reference.itemId)
-                            )
-                        }
-                    },
-
                     onBackClick = {
                         workspaceState.openLibrary()
                     },
-
                     onEditClick = {
                         workspaceState.openEditor(songId)
                     },
-
                     onSlideClick = { song, _, globalIndex ->
                         val presentation = presentationFactory.create(song)
 

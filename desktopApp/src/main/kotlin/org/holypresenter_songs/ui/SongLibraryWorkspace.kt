@@ -3,6 +3,7 @@ package org.holypresenter_songs.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import holypresenter.org.platform.api.module.ModuleContext
+import holypresenter.org.platform.api.planner.PlannerItemHandlerRegistry
 import holypresenter.org.platform.api.planner.PlannerService
 import org.holypresenter.platform.ui.planner.PlannerSidePane
 import org.holypresenter.platform.ui.workspace.HolyWorkspace
@@ -16,14 +17,20 @@ fun SongLibraryWorkspace(
     repository: SongRepository,
     selectedSongId: SongId?,
     onCreateSong: () -> Unit,
-    onOpenSong: (SongId) -> Unit,
-    onPresentSong: (SongId) -> Unit
+    onOpenSong: (SongId) -> Unit
 ) {
     val plannerService = remember(moduleContext) {
         moduleContext.services.get(
             PlannerService::class
         )
     }
+
+    val plannerItemHandlerRegistry =
+        remember(moduleContext) {
+            moduleContext.services.get(
+                PlannerItemHandlerRegistry::class
+            )
+        }
 
     HolyWorkspace(
         left = {
@@ -39,15 +46,7 @@ fun SongLibraryWorkspace(
             PlannerSidePane(
                 plannerService = plannerService,
                 onItemClick = { item, _ ->
-                    if (
-                        item.reference.moduleId == "songs"
-                    ) {
-                        onPresentSong(
-                            SongId(
-                                item.reference.itemId
-                            )
-                        )
-                    }
+                    plannerItemHandlerRegistry?.activate(item)
                 }
             )
         }
