@@ -6,6 +6,7 @@ import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.projection.ProjectionContent
 import holypresenter.org.platform.api.projection.ProjectionService
 import org.holypresenter_songs.domain.factory.SongFactory
+import org.holypresenter_songs.importer.SongImportFactory
 import org.holypresenter_songs.presentation.SongPresentationFactory
 import org.holypresenter_songs.presentation.workspace.SongScreen
 import org.holypresenter_songs.presentation.workspace.SongWorkspaceState
@@ -39,6 +40,14 @@ fun SongsWorkspace(
 
                     repository.save(newSong)
                     workspaceState.openEditor(newSong.id)
+                },
+                onImportSong = { draft ->
+                    val importedSong = SongImportFactory.create(draft)
+
+                    repository.save(importedSong)
+                    workspaceState.openEditor(
+                        importedSong.id
+                    )
                 },
                 onOpenSong = { songId ->
                     workspaceState.openEditor(songId)

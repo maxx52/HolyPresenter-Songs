@@ -11,6 +11,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,6 +36,7 @@ fun SongLibraryPane(
     selectedSongId: SongId?,
     plannerService: PlannerService?,
     onCreateSong: () -> Unit,
+    onImportSong: () -> Unit,
     onOpenSong: (SongId) -> Unit
 ) {
     val songs = repository.getAll()
@@ -69,7 +71,13 @@ fun SongLibraryPane(
             Text("Новая песня")
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = onImportSong
+        ) {
+            Text("Импортировать")
+        }
 
         OutlinedTextField(
             value = search,
