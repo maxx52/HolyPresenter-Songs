@@ -2,11 +2,13 @@ package org.holypresenter_songs.ui.library
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -27,6 +29,7 @@ import holypresenter.org.platform.api.planner.PlannerItem
 import holypresenter.org.platform.api.planner.PlannerReference
 import holypresenter.org.platform.api.planner.PlannerService
 import org.holypresenter.platform.ui.workspace.HolyLibraryPane
+import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.SongId
 import org.holypresenter_songs.repository.SongRepository
 
@@ -37,12 +40,17 @@ fun SongLibraryPane(
     plannerService: PlannerService?,
     onCreateSong: () -> Unit,
     onImportSong: () -> Unit,
-    onOpenSong: (SongId) -> Unit
+    onOpenSong: (SongId) -> Unit,
+    onDeleteSong: (SongId) -> Unit,
 ) {
     val songs = repository.getAll()
 
     var search by remember {
         mutableStateOf("")
+    }
+
+    var songPendingDeletion by remember {
+        mutableStateOf<Song?>(null)
     }
 
     val filteredSongs = remember(
@@ -116,22 +124,40 @@ fun SongLibraryPane(
                         }
                     },
                     trailingContent = {
-                        TextButton(
-                            onClick = {
-                                plannerService?.add(
-                                    PlannerItem.Generic(
-                                        reference = PlannerReference(
-                                            moduleId = "songs",
-                                            itemId = song.id.value
-                                        ),
-                                        title = song.metadata.title.ifBlank {
-                                            "Без названия"
-                                        }
+                        Row(
+                            horizontalArrangement =
+                                Arrangement.spacedBy(4.dp)
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    plannerService?.add(
+                                        PlannerItem.Generic(
+                                            reference =
+                                                PlannerReference(
+                                                    moduleId = "songs",
+                                                    itemId = song.id.value
+                                                ),
+                                            title =
+                                                song.metadata.title.ifBlank {
+                                                    "Без названия"
+                                                }
+                                        )
                                     )
+                                }
+                            ) {
+                                Text("+")
+                            }
+
+                            TextButton(
+                                onClick = {
+                                    songPendingDeletion = song
+                                }
+                            ) {
+                                Text(
+                                    text = "Удалить",
+                                    color = MaterialTheme.colorScheme.error
                                 )
                             }
-                        ) {
-                            Text("+")
                         }
                     },
                     modifier = Modifier
@@ -148,6 +174,49 @@ fun SongLibraryPane(
                     )
                 )
             }
+        }
+
+        songPendingDeletion?.let { song ->
+            val songTitle =
+                song.metadata.title.ifBlank {
+                    "Без названия"
+                }
+
+            AlertDialog(
+                onDismissRequest = {
+                    songPendingDeletion = null
+                },
+                title = {
+                    Text("Удалить песню?")
+                },
+                text = {
+                    Text(
+                        "Песня «$songTitle» будет удалена без возможности восстановления."
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onDeleteSong(song.id)
+                            songPendingDeletion = null
+                        }
+                    ) {
+                        Text(
+                            text = "Удалить",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            songPendingDeletion = null
+                        }
+                    ) {
+                        Text("Отмена")
+                    }
+                }
+            )
         }
     }
 }

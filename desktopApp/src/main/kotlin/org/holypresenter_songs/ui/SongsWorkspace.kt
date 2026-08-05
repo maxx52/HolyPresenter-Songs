@@ -3,6 +3,7 @@ package org.holypresenter_songs.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import holypresenter.org.platform.api.module.ModuleContext
+import holypresenter.org.platform.api.planner.PlannerService
 import holypresenter.org.platform.api.projection.ProjectionContent
 import holypresenter.org.platform.api.projection.ProjectionService
 import org.holypresenter_songs.domain.factory.SongFactory
@@ -22,6 +23,12 @@ fun SongsWorkspace(
     val projectionService = remember(moduleContext) {
         moduleContext.services.get(
             ProjectionService::class
+        )
+    }
+
+    val plannerService = remember(moduleContext) {
+        moduleContext.services.get(
+            PlannerService::class
         )
     }
 
@@ -48,6 +55,23 @@ fun SongsWorkspace(
                     workspaceState.openEditor(
                         importedSong.id
                     )
+                },
+                onDeleteSong = { songId ->
+                    repository.delete(songId)
+
+                    if (plannerService != null) {
+                        val linkedItems =
+                            plannerService.state.items
+                                .filter { item ->
+                                    item.reference.moduleId == "songs" &&
+                                            item.reference.itemId ==
+                                            songId.value
+                                }
+                                .toList()
+                        linkedItems.forEach { item ->
+                            plannerService.remove(item)
+                        }
+                    }
                 },
                 onOpenSong = { songId ->
                     workspaceState.openEditor(songId)

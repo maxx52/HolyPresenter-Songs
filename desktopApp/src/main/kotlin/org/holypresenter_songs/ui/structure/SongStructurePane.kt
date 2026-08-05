@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import org.holypresenter_songs.domain.SongSection
 import org.holypresenter_songs.domain.SongSectionType
 import org.holypresenter_songs.domain.SongSlide
+import org.holypresenter_songs.domain.editor.command.UpdateSlideChordsCommand
 import org.holypresenter_songs.domain.editor.command.UpdateSlideTextCommand
 import org.holypresenter_songs.domain.editor.command.section.AddSectionCommand
 import org.holypresenter_songs.domain.editor.command.section.DeleteSectionCommand
@@ -84,7 +85,18 @@ fun SongStructurePane(
                             )
                         )
                     },
+                    onSlideChordsChanged = {
+                            slide,
+                            chordsText ->
 
+                        context.editor.execute(
+                            UpdateSlideChordsCommand(
+                                section = section,
+                                slide = slide,
+                                newText = chordsText
+                            )
+                        )
+                    },
                     onDeleteSlide = { selectedSection, slide ->
                         context.editor.execute(
                             DeleteSlideCommand(
@@ -93,7 +105,6 @@ fun SongStructurePane(
                             )
                         )
                     },
-
                     onDuplicateSlide = { selectedSection, slide ->
                         context.editor.execute(
                             DuplicateSlideCommand(
@@ -102,20 +113,17 @@ fun SongStructurePane(
                             )
                         )
                     },
-
                     onDeleteSection = { selectedSection ->
                         context.editor.execute(
                             DeleteSectionCommand(selectedSection)
                         )
                     },
-
                     onDuplicateSection = { selectedSection ->
                         context.editor.execute(
                             DuplicateSectionCommand(selectedSection)
                         )
                     }
                 )
-
                 Spacer(Modifier.height(12.dp))
             }
 
@@ -138,13 +146,10 @@ fun SongStructurePane(
                         SongSection(
                             type = type,
                             number = nextSectionNumber(song, type),
-                            slides = listOf(
-                                SongSlide(lines = listOf(""))
-                            )
+                            slides = listOf(SongSlide(lines = listOf("")))
                         )
                     )
                 )
-
                 showAddDialog = false
             }
         )

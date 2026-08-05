@@ -24,7 +24,8 @@ fun SongLibraryWorkspace(
     selectedSongId: SongId?,
     onCreateSong: () -> Unit,
     onImportSong: (SongImportDraft) -> Unit,
-    onOpenSong: (SongId) -> Unit
+    onOpenSong: (SongId) -> Unit,
+    onDeleteSong: (SongId) -> Unit,
 ) {
     var isImportDialogOpen by remember {
         mutableStateOf(false)
@@ -57,7 +58,8 @@ fun SongLibraryWorkspace(
                 onImportSong = {
                     isImportDialogOpen = true
                 },
-                onOpenSong = onOpenSong
+                onOpenSong = onOpenSong,
+                onDeleteSong = onDeleteSong,
             )
         },
         right = {

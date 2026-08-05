@@ -19,6 +19,7 @@ fun SongSectionCard(
     selectedSlide: SongSlide? = null,
     onSlideSelected: (SongSlide) -> Unit = {},
     onSlideChanged: (SongSlide, String) -> Unit = { _, _ -> },
+    onSlideChordsChanged: (SongSlide, String) -> Unit = { _, _ -> },
     onDuplicateSlide: (SongSection, SongSlide) -> Unit = { _, _ -> },
     onDeleteSlide: (SongSection, SongSlide) -> Unit = { _, _ -> },
     onDuplicateSection: (SongSection) -> Unit = {},
@@ -74,6 +75,12 @@ fun SongSectionCard(
                         },
                         onTextChange = {
                             onSlideChanged(slide, it)
+                        },
+                        onChordsChange = { chordsText ->
+                            onSlideChordsChanged(
+                                slide,
+                                chordsText
+                            )
                         },
                         onDelete = {
                             onDeleteSlide(section, slide)

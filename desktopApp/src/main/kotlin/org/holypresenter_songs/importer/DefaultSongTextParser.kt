@@ -255,7 +255,8 @@ internal class DefaultSongTextParser :
             when (normalizedName) {
                 "куплет",
                 "verse",
-                "стих" ->
+                "стих",
+                "запев"->
                     SongSectionType.VERSE
 
                 "припев",
