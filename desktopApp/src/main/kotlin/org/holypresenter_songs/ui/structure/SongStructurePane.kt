@@ -32,6 +32,7 @@ import org.holypresenter_songs.presentation.SongEditorContext
 import org.holypresenter_songs.ui.components.AddSectionButton
 import org.holypresenter_songs.ui.components.AddSectionDialog
 import org.holypresenter_songs.ui.components.SongSectionCard
+import org.holypresenter_songs.domain.editor.command.slide.SplitSlideCommand
 
 @Composable
 fun SongStructurePane(
@@ -96,6 +97,47 @@ fun SongStructurePane(
                                 newText = chordsText
                             )
                         )
+                    },
+                    onSlideSplit = {
+                            slide,
+                            splitOffset ->
+
+                        val command =
+                            SplitSlideCommand(
+                                section = section,
+                                slide = slide,
+                                splitOffset = splitOffset
+                            )
+
+                        context.editor.execute(command)
+
+                        /*
+                         * После разделения выбираем
+                         * созданный второй слайд.
+                         */
+                        val updatedSection =
+                            context.state.song
+                                ?.sections
+                                ?.firstOrNull {
+                                    it.id == section.id
+                                }
+
+                        val createdSlide =
+                            updatedSection
+                                ?.slides
+                                ?.firstOrNull {
+                                    it.id == command.secondSlide.id
+                                }
+
+                        if (
+                            updatedSection != null &&
+                            createdSlide != null
+                        ) {
+                            context.state.selectSlide(
+                                section = updatedSection,
+                                slide = createdSlide
+                            )
+                        }
                     },
                     onDeleteSlide = { selectedSection, slide ->
                         context.editor.execute(

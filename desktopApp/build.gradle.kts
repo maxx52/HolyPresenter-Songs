@@ -7,15 +7,20 @@ plugins {
 
 dependencies {
     implementation(compose.desktop.currentOs)
+    implementation("org.jetbrains.compose.runtime:runtime:1.11.1")
+    implementation("org.jetbrains.compose.foundation:foundation:1.11.1")
+    implementation("org.jetbrains.compose.ui:ui:1.11.1")
+    implementation("org.jetbrains.compose.material3:material3:1.9.0")
+    implementation("org.jetbrains.compose.ui:ui-tooling-preview:1.11.1")
     implementation(libs.kotlinx.coroutinesSwing)
-    implementation(libs.compose.uiToolingPreview)
-    implementation("org.holypresenter:platform-api:0.6.0")
-    implementation("org.holypresenter:platform-ui:0.6.0")
-    implementation(libs.androidx.material3.desktop)
-    implementation(libs.androidx.material3.jvmstubs)
-    implementation(libs.androidx.runtime.desktop)
-    implementation(libs.androidx.foundation.layout.desktop)
     implementation(libs.kotlinxSerializationJson)
+    implementation("org.holypresenter:platform-api:0.6.0")
+    implementation("org.holypresenter:platform-ui:0.6.0") {
+        exclude(group = "androidx.compose.material3")
+        exclude(group = "androidx.compose.runtime")
+        exclude(group = "androidx.compose.foundation")
+        exclude(group = "androidx.compose.ui")
+    }
 }
 
 tasks.withType<Jar>().configureEach {
