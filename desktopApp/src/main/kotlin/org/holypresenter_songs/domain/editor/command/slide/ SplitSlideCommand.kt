@@ -26,132 +26,60 @@ class SplitSlideCommand(
             maximumValue = originalText.length
         )
 
-    private val alignedChords =
-        List(originalLines.size) { index ->
-            slide.chords.getOrNull(index)
-        }
+    private val alignedChords = slide.alignedChords()
 
     private val splitResult = splitContent()
 
     private val firstSlide =
         slide.copy(
             lines = splitResult.firstLines,
-            chords = compactChords(
-                splitResult.firstChords
-            )
+            chords = splitResult
+                .firstChords
+                .compactChordLines()
         )
 
     val secondSlide =
         SongSlide(
             lines = splitResult.secondLines,
-            chords = compactChords(
-                splitResult.secondChords
-            )
+            chords = splitResult
+                .secondChords
+                .compactChordLines()
         )
 
-    override fun execute(
-        song: Song
-    ): Song {
-        val sectionIndex =
-            song.sections.indexOfFirst {
-                it.id == section.id
-            }
+    private val beforeSlides = section.slides
 
-        if (sectionIndex == -1) {
-            return song
-        }
+    private val afterSlides =
+        beforeSlides
+            .toMutableList()
+            .apply {
+                val slideIndex =
+                    indexOfFirst {
+                        it.id == slide.id
+                    }
 
-        val sections = song.sections.toMutableList()
-        val currentSection = sections[sectionIndex]
+                if (slideIndex != -1) {
+                    this[slideIndex] = firstSlide
 
-        val slideIndex =
-            currentSection.slides.indexOfFirst {
-                it.id == slide.id
-            }
+                    add(
+                        index = slideIndex + 1,
+                        element = secondSlide
+                    )
+                }
+            }.toList()
 
-        if (slideIndex == -1) {
-            return song
-        }
-
-        val slides = currentSection.slides.toMutableList()
-
-        slides[slideIndex] = firstSlide
-
-        /*
-         * При повторном выполнении команды
-         * не добавляем второй слайд дважды.
-         */
-        if (
-            slides.none {
-                it.id == secondSlide.id
-            }
-        ) {
-            slides.add(
-                index = slideIndex + 1,
-                element = secondSlide
-            )
-        }
-
-        sections[sectionIndex] =
-            currentSection.copy(
-                slides = slides
-            )
-
-        return song.copy(
-            sections = sections
+    override fun execute(song: Song): Song =
+        song.replaceSectionSlides(
+            sectionId = section.id,
+            expectedSlides = beforeSlides,
+            replacementSlides = afterSlides
         )
-    }
 
-    override fun undo(
-        song: Song
-    ): Song {
-        val sectionIndex =
-            song.sections.indexOfFirst {
-                it.id == section.id
-            }
-
-        if (sectionIndex == -1) {
-            return song
-        }
-
-        val sections = song.sections.toMutableList()
-        val currentSection = sections[sectionIndex]
-        val slides = currentSection.slides.toMutableList()
-
-        val firstSlideIndex =
-            slides.indexOfFirst {
-                it.id == originalSlide.id
-            }
-
-        if (firstSlideIndex == -1) {
-            return song
-        }
-
-        /*
-         * Возвращаем исходный слайд
-         * вместе с его текстом и аккордами.
-         */
-        slides[firstSlideIndex] =
-            originalSlide
-
-        val secondSlideIndex =
-            slides.indexOfFirst {
-                it.id == secondSlide.id
-            }
-
-        if (secondSlideIndex != -1) {
-            slides.removeAt(secondSlideIndex)
-        }
-
-        sections[sectionIndex] =
-            currentSection.copy(
-                slides = slides
-            )
-
-        return song.copy(
-            sections = sections
+    override fun undo(song: Song): Song =
+        song.replaceSectionSlides(
+            sectionId = section.id,
+            expectedSlides = afterSlides,
+            replacementSlides = beforeSlides
         )
-    }
 
     private fun splitContent(): SplitResult {
         val textBeforeCursor =
@@ -287,19 +215,6 @@ class SplitSlideCommand(
             secondChords = secondChords
         )
     }
-
-    private fun compactChords(
-        chords: List<String?>
-    ): List<String?> =
-        if (
-            chords.all {
-                it.isNullOrBlank()
-            }
-        ) {
-            emptyList()
-        } else {
-            chords
-        }
 
     private data class SplitResult(
         val firstLines: List<String>,

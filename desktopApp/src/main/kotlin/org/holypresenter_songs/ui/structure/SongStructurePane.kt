@@ -33,6 +33,7 @@ import org.holypresenter_songs.ui.components.AddSectionButton
 import org.holypresenter_songs.ui.components.AddSectionDialog
 import org.holypresenter_songs.ui.components.SongSectionCard
 import org.holypresenter_songs.domain.editor.command.slide.SplitSlideCommand
+import org.holypresenter_songs.domain.editor.command.slide.MergeSlideWithPreviousCommand
 
 @Composable
 fun SongStructurePane(
@@ -62,20 +63,17 @@ fun SongStructurePane(
                 SongSectionCard(
                     section = section,
                     selectedSlide = selectedSlide,
-
                     onSlideSelected = { slide ->
                         context.state.selectSlide(
                             section = section,
                             slide = slide
                         )
                     },
-
                     onAddSlide = { selectedSection ->
                         context.editor.execute(
                             AddSlideCommand(selectedSection)
                         )
                     },
-
                     onSlideChanged = { slide, text ->
                         context.editor.execute(
                             UpdateSlideTextCommand(
@@ -89,7 +87,6 @@ fun SongStructurePane(
                     onSlideChordsChanged = {
                             slide,
                             chordsText ->
-
                         context.editor.execute(
                             UpdateSlideChordsCommand(
                                 section = section,
@@ -101,7 +98,6 @@ fun SongStructurePane(
                     onSlideSplit = {
                             slide,
                             splitOffset ->
-
                         val command =
                             SplitSlideCommand(
                                 section = section,
@@ -111,10 +107,6 @@ fun SongStructurePane(
 
                         context.editor.execute(command)
 
-                        /*
-                         * После разделения выбираем
-                         * созданный второй слайд.
-                         */
                         val updatedSection =
                             context.state.song
                                 ?.sections
@@ -136,6 +128,41 @@ fun SongStructurePane(
                             context.state.selectSlide(
                                 section = updatedSection,
                                 slide = createdSlide
+                            )
+                        }
+                    },
+                    onSlideMergeWithPrevious = { slide ->
+                        val command =
+                            MergeSlideWithPreviousCommand(
+                                section = section,
+                                currentSlide = slide
+                            )
+
+                        val mergedSlideId = command.mergedSlideId
+
+                        context.editor.execute(command)
+
+                        val updatedSection =
+                            context.state.song
+                                ?.sections
+                                ?.firstOrNull {
+                                    it.id == section.id
+                                }
+
+                        val mergedSlide =
+                            updatedSection
+                                ?.slides
+                                ?.firstOrNull {
+                                    it.id == mergedSlideId
+                                }
+
+                        if (
+                            updatedSection != null &&
+                            mergedSlide != null
+                        ) {
+                            context.state.selectSlide(
+                                section = updatedSection,
+                                slide = mergedSlide
                             )
                         }
                     },

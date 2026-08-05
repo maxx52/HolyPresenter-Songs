@@ -25,6 +25,7 @@ fun SongSectionCard(
     onDeleteSlide: (SongSection, SongSlide) -> Unit = { _, _ -> },
     onDuplicateSection: (SongSection) -> Unit = {},
     onDeleteSection: (SongSection) -> Unit = {},
+    onSlideMergeWithPrevious: (SongSlide) -> Unit = {},
 ) {
     Row(
         modifier = modifier.fillMaxWidth()
@@ -66,8 +67,7 @@ fun SongSectionCard(
 
                 Spacer(Modifier.height(18.dp))
 
-                section.slides.forEachIndexed { _, slide ->
-
+                section.slides.forEachIndexed { slideIndex, slide ->
                     SongSlideCard(
                         slide = slide,
                         selected = slide == selectedSlide,
@@ -88,6 +88,10 @@ fun SongSectionCard(
                                 slide,
                                 splitOffset
                             )
+                        },
+                        canMergeWithPrevious = slideIndex > 0,
+                        onMergeWithPrevious = {
+                            onSlideMergeWithPrevious(slide)
                         },
                         onDelete = {
                             onDeleteSlide(section, slide)

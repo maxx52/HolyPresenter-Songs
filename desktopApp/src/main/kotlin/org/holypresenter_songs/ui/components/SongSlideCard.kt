@@ -44,6 +44,8 @@ fun SongSlideCard(
     onSplit: (Int) -> Unit,
     onDelete: () -> Unit,
     onDuplicate: () -> Unit,
+    canMergeWithPrevious: Boolean,
+    onMergeWithPrevious: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val externalLyricsText = slide.lines.joinToString("\n")
@@ -166,32 +168,33 @@ fun SongSlideCard(
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
                         .onPreviewKeyEvent { event ->
-                            val shouldSplit =
-                                event.type ==
-                                    KeyEventType.KeyDown &&
-                                    event.key ==
-                                    Key.Enter &&
-                                    event.isCtrlPressed
+                            if (event.type != KeyEventType.KeyDown) {
+                                return@onPreviewKeyEvent false
+                            }
 
-                            if (shouldSplit) {
-                                val splitOffset =
-                                    minOf(
-                                        lyricsFieldValue
-                                            .selection
-                                            .start,
-                                        lyricsFieldValue
-                                            .selection
-                                            .end
-                                    )
+                            val selection = lyricsFieldValue.selection
 
-                                onSplit(splitOffset)
-                                /*
-                                 * Не передаём Ctrl+Enter
-                                 * стандартному обработчику.
-                                 */
-                                true
-                            } else {
-                                false
+                            when {
+                                event.isCtrlPressed && event.key == Key.Enter -> {
+                                    val splitOffset =
+                                        minOf(
+                                            selection.start,
+                                            selection.end
+                                        )
+
+                                    onSplit(splitOffset)
+                                    true
+                                }
+
+                                event.isCtrlPressed &&
+                                    event.key == Key.Backspace &&
+                                    canMergeWithPrevious &&
+                                    selection.collapsed &&
+                                    selection.start == 0 -> {
+                                        onMergeWithPrevious()
+                                        true
+                                    }
+                                else -> false
                             }
                         }
                         .onFocusChanged {
