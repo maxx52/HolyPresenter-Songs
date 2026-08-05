@@ -30,21 +30,24 @@ fun SongPresenterSlideCard(
             .heightIn(min = 100.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        border = if (selected) {
-            BorderStroke(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.primary
-            )
-        } else {
-            null
-        },
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) {
-                MaterialTheme.colorScheme.primaryContainer
+        border =
+            if (selected) {
+                BorderStroke(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
+                )
             } else {
-                MaterialTheme.colorScheme.surfaceContainer
-            }
-        )
+                null
+            },
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (selected) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainer
+                    }
+            )
     ) {
         Column(
             modifier = Modifier.padding(14.dp)
@@ -56,9 +59,12 @@ fun SongPresenterSlideCard(
             )
 
             Text(
-                text = slide.lines
-                    .joinToString("\n")
-                    .ifBlank { "Пустой слайд" },
+                text =
+                    slide.lines
+                        .joinToString("\n")
+                        .ifBlank {
+                            "Пустой слайд"
+                        },
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp)
             )

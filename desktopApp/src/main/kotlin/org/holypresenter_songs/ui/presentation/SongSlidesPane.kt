@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,6 +79,24 @@ fun SongSlidesPane(
 
     var selectedSlideIndex by remember(song.id) {
         mutableStateOf<Int?>(null)
+    }
+
+    val slidesListState = rememberLazyListState()
+
+    LaunchedEffect(selectedSlideIndex) {
+        val slideIndex =
+            selectedSlideIndex
+                ?: return@LaunchedEffect
+
+        val lazyItemIndex =
+            lazyItemIndexForSlide(
+                song = song,
+                globalSlideIndex = slideIndex
+            )
+
+        slidesListState.animateScrollToItem(
+            index = lazyItemIndex
+        )
     }
 
     fun showSlide(index: Int): Boolean {
@@ -324,11 +344,11 @@ fun SongSlidesPane(
         )
 
         LazyColumn(
+            state = slidesListState,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            verticalArrangement =
-                Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             var globalIndex = 0
 
@@ -405,6 +425,30 @@ private fun SlideNavigationControls(
             )
         }
     }
+}
+
+private fun lazyItemIndexForSlide(
+    song: Song,
+    globalSlideIndex: Int
+): Int {
+    var remainingSlideIndex = globalSlideIndex
+    var lazyItemIndex = 0
+
+    song.sections.forEach { section ->
+        /*
+         * Заголовок секции занимает отдельный
+         * элемент внутри LazyColumn.
+         */
+        lazyItemIndex++
+
+        if (remainingSlideIndex < section.slides.size) {
+            return lazyItemIndex + remainingSlideIndex
+        }
+
+        remainingSlideIndex -= section.slides.size
+        lazyItemIndex += section.slides.size
+    }
+    return 0
 }
 
 private fun sectionTitle(
