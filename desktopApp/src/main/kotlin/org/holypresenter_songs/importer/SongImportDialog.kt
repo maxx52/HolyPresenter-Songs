@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -72,6 +74,10 @@ internal fun SongImportDialog(
             section.slides.size
         }
 
+    var showChordsInPreview by remember {
+        mutableStateOf(true)
+    }
+
     AlertDialog(
         modifier = Modifier.width(980.dp),
         onDismissRequest = onDismissRequest,
@@ -110,6 +116,10 @@ internal fun SongImportDialog(
                 ImportPreviewColumn(
                     draft = parsedDraft,
                     slideCount = slideCount,
+                    showChords = showChordsInPreview,
+                    onShowChordsChange = {
+                        showChordsInPreview = it
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
@@ -244,8 +254,19 @@ private fun ImportSourceColumn(
 private fun ImportPreviewColumn(
     draft: SongImportDraft,
     slideCount: Int,
+    showChords: Boolean,
+    onShowChordsChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val containsChords =
+        draft.sections.any { section ->
+            section.slides.any { slide ->
+                slide.chords.any { chords ->
+                    !chords.isNullOrBlank()
+                }
+            }
+        }
+
     Column(
         modifier = modifier,
         verticalArrangement =
@@ -262,6 +283,42 @@ private fun ImportPreviewColumn(
                         "слайдов: $slideCount",
             style = MaterialTheme.typography.bodySmall
         )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Checkbox(
+                checked = containsChords && showChords,
+                enabled = containsChords,
+                onCheckedChange = { checked ->
+                    onShowChordsChange(checked)
+                },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = MaterialTheme.colorScheme.primary,
+                    uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    checkmarkColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledCheckedColor =
+                        MaterialTheme.colorScheme.primary.copy(
+                            alpha = 0.55f
+                        ),
+                    disabledUncheckedColor =
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = 0.55f
+                        )
+                )
+            )
+
+            Text(
+                text = if (containsChords) {
+                    "Показывать аккорды в предпросмотре"
+                } else {
+                    "Аккорды в тексте не обнаружены"
+                },
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
 
         if (draft.isEmpty) {
             Box(
@@ -282,7 +339,9 @@ private fun ImportPreviewColumn(
             ) {
                 items(
                     items = draft.sections,
-                    key = { section -> section.id.value }
+                    key = { section ->
+                        section.id.value
+                    }
                 ) { section ->
                     Column(
                         verticalArrangement =
@@ -305,9 +364,10 @@ private fun ImportPreviewColumn(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Column(
-                                    modifier = Modifier.padding(12.dp),
+                                    modifier =
+                                        Modifier.padding(12.dp),
                                     verticalArrangement =
-                                        Arrangement.spacedBy(4.dp)
+                                        Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
                                         text =
@@ -318,8 +378,45 @@ private fun ImportPreviewColumn(
                                                 .labelMedium
                                     )
 
-                                    slide.lines.forEach { line ->
-                                        Text(line)
+                                    slide.lines.forEachIndexed {
+                                            lineIndex,
+                                            lyricsLine ->
+
+                                        val chordLine =
+                                            slide.chords
+                                                .getOrNull(lineIndex)
+
+                                        Column(
+                                            verticalArrangement =
+                                                Arrangement.spacedBy(
+                                                    2.dp
+                                                )
+                                        ) {
+                                            if (
+                                                showChords &&
+                                                !chordLine.isNullOrBlank()
+                                            ) {
+                                                Text(
+                                                    text = chordLine,
+                                                    style =
+                                                        MaterialTheme
+                                                            .typography
+                                                            .bodySmall,
+                                                    color =
+                                                        MaterialTheme
+                                                            .colorScheme
+                                                            .primary
+                                                )
+                                            }
+
+                                            if (
+                                                lyricsLine.isNotBlank()
+                                            ) {
+                                                Text(
+                                                    text = lyricsLine
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }

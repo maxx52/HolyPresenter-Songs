@@ -15,9 +15,10 @@ internal class DefaultSongTextParser :
             "maxLinesPerSlide must be greater than zero"
         }
 
-        val normalizedText = text
-            .replace("\r\n", "\n")
-            .replace('\r', '\n')
+        val normalizedText =
+            text
+                .replace("\r\n", "\n")
+                .replace('\r', '\n')
 
         if (normalizedText.isBlank()) {
             return SongImportDraft()
@@ -25,12 +26,12 @@ internal class DefaultSongTextParser :
 
         val parsedSections = mutableListOf<MutableSection>()
         val sectionCounters = mutableMapOf<SongSectionType, Int>()
+        var pendingChordLine: String? = null
 
         fun startSection(
             header: SectionHeader
         ) {
-            val currentNumber =
-                sectionCounters[header.type] ?: 0
+            val currentNumber = sectionCounters[header.type] ?: 0
 
             val sectionNumber =
                 header.number
@@ -50,54 +51,117 @@ internal class DefaultSongTextParser :
                 )
         }
 
+        fun ensureSection() {
+            if (parsedSections.isNotEmpty()) {
+                return
+            }
+
+            startSection(
+                SectionHeader(
+                    type = SongSectionType.VERSE,
+                    number = 1
+                )
+            )
+        }
+
+        fun appendPendingChordAsInstrumental() {
+            val chordLine = pendingChordLine ?: return
+
+            ensureSection()
+
+            parsedSections
+                .last()
+                .lines
+                .add(
+                    ParsedSongLine(
+                        text = "",
+                        chords = chordLine
+                    )
+                )
+            pendingChordLine = null
+        }
+
+        fun appendParagraphBreak() {
+            if (parsedSections.isEmpty()) {
+                return
+            }
+
+            val currentLines = parsedSections.last().lines
+
+            if (
+                currentLines.isNotEmpty() &&
+                currentLines.last() != null
+            ) {
+                currentLines.add(null)
+            }
+        }
+
         normalizedText
             .lines()
             .forEach { rawLine ->
-                val line = rawLine.trim()
-                val header = parseSectionHeader(line)
+                /*
+                 * Для аккордов сохраняем начальные пробелы:
+                 * они могут использоваться для выравнивания
+                 * аккордов относительно слов.
+                 */
+                val line = rawLine.trimEnd()
+                val trimmedLine = line.trim()
+                val header = parseSectionHeader(trimmedLine)
 
                 if (header != null) {
+                    appendPendingChordAsInstrumental()
                     startSection(header)
                     return@forEach
                 }
 
-                if (
-                    line.isNotBlank() &&
-                    isChordLine(line)
-                ) {
+                if (trimmedLine.isBlank()) {
+                    appendPendingChordAsInstrumental()
+                    appendParagraphBreak()
                     return@forEach
                 }
 
-                if (parsedSections.isEmpty()) {
-                    if (line.isBlank()) {
-                        return@forEach
+                if (isChordLine(trimmedLine)) {
+                    /*
+                     * Если подряд встретились две строки
+                     * аккордов, предыдущую сохраняем как
+                     * самостоятельную инструментальную строку.
+                     */
+                    if (pendingChordLine != null) {
+                        appendPendingChordAsInstrumental()
                     }
 
-                    startSection(
-                        SectionHeader(
-                            type =
-                                SongSectionType.VERSE,
-                            number = 1
-                        )
-                    )
+                    ensureSection()
+                    pendingChordLine = line
+                    return@forEach
                 }
+                ensureSection()
 
                 parsedSections
                     .last()
                     .lines
-                    .add(line)
+                    .add(
+                        ParsedSongLine(
+                            text = trimmedLine,
+                            chords = pendingChordLine
+                        )
+                    )
+                pendingChordLine = null
             }
+        /**
+         * Сохраняем последнюю аккордную строку,
+         * если после неё не было строки текста.
+         */
+        appendPendingChordAsInstrumental()
 
         val sections =
             parsedSections.mapNotNull { section ->
                 val slides =
                     splitIntoSlides(
                         lines = section.lines,
-                        maxLinesPerSlide =
-                            maxLinesPerSlide
-                    ).map { lines ->
-                        SongSlide(
-                            lines = lines
+                        maxLinesPerSlide = maxLinesPerSlide
+                    ).map { slideLines ->
+                        createSongSlide(
+                            lines = slideLines
                         )
                     }
 
@@ -117,6 +181,34 @@ internal class DefaultSongTextParser :
         )
     }
 
+    private fun createSongSlide(
+        lines: List<ParsedSongLine>
+    ): SongSlide {
+        val lyricsLines =
+            lines.map { line ->
+                line.text
+            }
+
+        val chordLines =
+            lines.map { line ->
+                line.chords
+            }
+
+        val containsChords =
+            chordLines.any { chords ->
+                chords != null
+            }
+
+        return SongSlide(
+            lines = lyricsLines,
+            chords = if (containsChords) {
+                chordLines
+            } else {
+                emptyList()
+            }
+        )
+    }
+
     private fun parseSectionHeader(
         line: String
     ): SectionHeader? {
@@ -127,12 +219,7 @@ internal class DefaultSongTextParser :
         val cleanedLine =
             line
                 .trim()
-                .trim(
-                    '[',
-                    ']',
-                    '(',
-                    ')'
-                )
+                .trim('[', ']', '(', ')')
                 .removeSuffix(":")
                 .trim()
 
@@ -193,7 +280,9 @@ internal class DefaultSongTextParser :
 
                 "вступление",
                 "интро",
-                "intro" ->
+                "intro",
+                "проигрыш",
+                "instrumental" ->
                     SongSectionType.INTRO
 
                 "концовка",
@@ -223,16 +312,7 @@ internal class DefaultSongTextParser :
                 .replace("|", " ")
                 .split(MULTIPLE_SPACES_REGEX)
                 .map { token ->
-                    token.trim(
-                        ',',
-                        ';',
-                        ':',
-                        '.',
-                        '(',
-                        ')',
-                        '[',
-                        ']'
-                    )
+                    token.trim(',', ';', ':', '.', '(', ')', '[', ']')
                 }
                 .filter { token ->
                     token.isNotBlank()
@@ -249,33 +329,58 @@ internal class DefaultSongTextParser :
     }
 
     private fun splitIntoSlides(
-        lines: List<String>,
+        lines: List<ParsedSongLine?>,
         maxLinesPerSlide: Int
-    ): List<List<String>> {
-        val slides = mutableListOf<List<String>>()
-        val paragraph = mutableListOf<String>()
+    ): List<List<ParsedSongLine>> {
+        val slides = mutableListOf<List<ParsedSongLine>>()
+        val currentSlide = mutableListOf<ParsedSongLine>()
 
-        fun flushParagraph() {
-            if (paragraph.isEmpty()) {
+        var lyricsLineCount = 0
+
+        fun flushSlide() {
+            if (currentSlide.isEmpty()) {
                 return
             }
 
-            paragraph
-                .chunked(maxLinesPerSlide)
-                .forEach { slideLines ->
-                    slides += slideLines
-                }
-            paragraph.clear()
+            slides += currentSlide.toList()
+            currentSlide.clear()
+            lyricsLineCount = 0
         }
 
-        lines.forEach { line ->
-            if (line.isBlank()) {
-                flushParagraph()
-            } else {
-                paragraph += line.trim()
+        lines.forEach { parsedLine ->
+            if (parsedLine == null) {
+                flushSlide()
+                return@forEach
+            }
+
+            val isLyricsLine = parsedLine.text.isNotBlank()
+
+            val isInstrumentalLine =
+                parsedLine.text.isBlank() &&
+                        parsedLine.chords != null
+
+            /**
+             * Аккордная строка не увеличивает
+             * количество строк текста на слайде.
+             *
+             * Но если лимит текста уже достигнут,
+             * инструментальную строку переносим
+             * на следующий слайд.
+             */
+            if (
+                lyricsLineCount >= maxLinesPerSlide &&
+                (isLyricsLine || isInstrumentalLine)
+            ) {
+                flushSlide()
+            }
+
+            currentSlide += parsedLine
+
+            if (isLyricsLine) {
+                lyricsLineCount++
             }
         }
-        flushParagraph()
+        flushSlide()
         return slides
     }
 
@@ -284,19 +389,25 @@ internal class DefaultSongTextParser :
         val number: Int?
     )
 
+    private data class ParsedSongLine(
+        val text: String,
+        val chords: String?
+    )
+
     private data class MutableSection(
         val type: SongSectionType,
         val number: Int,
-        val lines: MutableList<String> = mutableListOf()
+        /*
+         * null обозначает разрыв между
+         * абзацами или группами слайдов.
+         */
+        val lines: MutableList<ParsedSongLine?> = mutableListOf()
     )
 
     private companion object {
         val NUMBER_REGEX = Regex("""\d+""")
-
         val NUMBER_WITH_SIGN_REGEX = Regex("""№\s*\d+""")
-
         val SEPARATOR_REGEX = Regex("""[._:/\\—–-]+""")
-
         val MULTIPLE_SPACES_REGEX = Regex("""\s+""")
 
         val CHORD_TOKEN_REGEX =
