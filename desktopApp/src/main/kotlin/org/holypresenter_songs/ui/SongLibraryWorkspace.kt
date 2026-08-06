@@ -16,6 +16,7 @@ import org.holypresenter_songs.importer.SongImportDialog
 import org.holypresenter_songs.importer.SongImportDraft
 import org.holypresenter_songs.repository.SongRepository
 import org.holypresenter_songs.ui.library.SongLibraryPane
+import org.holypresenter_songs.importer.link.HolyChordsSongLinkImporter
 
 @Composable
 fun SongLibraryWorkspace(
@@ -33,6 +34,10 @@ fun SongLibraryWorkspace(
 
     val songTextParser = remember {
         DefaultSongTextParser()
+    }
+
+    val songLinkImporter = remember {
+        HolyChordsSongLinkImporter()
     }
 
     val plannerService = remember(moduleContext) {
@@ -81,7 +86,8 @@ fun SongLibraryWorkspace(
             onImport = { draft ->
                 isImportDialogOpen = false
                 onImportSong(draft)
-            }
+            },
+            linkImporter = songLinkImporter,
         )
     }
 }

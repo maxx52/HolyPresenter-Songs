@@ -34,10 +34,13 @@ import androidx.compose.ui.unit.dp
 import org.holypresenter_songs.domain.SongSectionType
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
+import org.holypresenter_songs.importer.link.SongLinkImportPanel
+import org.holypresenter_songs.importer.link.SongLinkImporter
 
 @Composable
 internal fun SongImportDialog(
     parser: SongTextParser,
+    linkImporter: SongLinkImporter,
     onDismissRequest: () -> Unit,
     onImport: (SongImportDraft) -> Unit
 ) {
@@ -93,6 +96,7 @@ internal fun SongImportDialog(
                     Arrangement.spacedBy(20.dp)
             ) {
                 ImportSourceColumn(
+                    linkImporter = linkImporter,
                     title = title,
                     onTitleChange = { title = it },
                     author = author,
@@ -155,6 +159,7 @@ internal fun SongImportDialog(
 
 @Composable
 private fun ImportSourceColumn(
+    linkImporter: SongLinkImporter,
     title: String,
     onTitleChange: (String) -> Unit,
     author: String,
@@ -171,6 +176,16 @@ private fun ImportSourceColumn(
         verticalArrangement =
             Arrangement.spacedBy(12.dp)
     ) {
+        SongLinkImportPanel(
+            importer = linkImporter,
+            onLoaded = { data ->
+                onTitleChange(data.title)
+                onAuthorChange(data.author.orEmpty())
+                onSourceTextChange(data.sourceText)
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+
         OutlinedTextField(
             value = title,
             onValueChange = onTitleChange,
