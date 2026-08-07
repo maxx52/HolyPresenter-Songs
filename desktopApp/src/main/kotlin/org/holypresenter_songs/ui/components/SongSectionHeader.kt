@@ -3,9 +3,9 @@ package org.holypresenter_songs.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +18,7 @@ import org.holypresenter_songs.ui.common.title
 @Composable
 fun SongSectionHeader(
     section: SongSection,
+    onAddToOrder: () -> Unit = {},
     onDuplicate: () -> Unit = {},
     onDelete: () -> Unit = {}
 ) {
@@ -30,17 +31,24 @@ fun SongSectionHeader(
         Box(
             modifier = Modifier
                 .size(12.dp)
-                .background(section.type.color(), CircleShape)
+                .background(
+                    section.type.color(),
+                    CircleShape
+                )
         )
 
-        Spacer(Modifier.width(12.dp))
+        Spacer(
+            modifier = Modifier.width(12.dp)
+        )
 
         Text(
             text = section.title(),
             style = MaterialTheme.typography.titleMedium
         )
 
-        Spacer(Modifier.width(8.dp))
+        Spacer(
+            modifier = Modifier.width(8.dp)
+        )
 
         Text(
             text = "${section.slides.size} слайд(ов)",
@@ -48,7 +56,21 @@ fun SongSectionHeader(
             color = MaterialTheme.colorScheme.outline
         )
 
-        Spacer(Modifier.weight(1f))
+        Spacer(
+            modifier = Modifier.weight(1f)
+        )
+
+        TextButton(
+            onClick = onAddToOrder
+        ) {
+            Text(
+                text = "＋ В порядок"
+            )
+        }
+
+        Spacer(
+            modifier = Modifier.width(4.dp)
+        )
 
         HolyDragHandle()
 

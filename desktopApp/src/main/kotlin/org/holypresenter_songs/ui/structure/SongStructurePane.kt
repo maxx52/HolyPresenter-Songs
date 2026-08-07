@@ -35,6 +35,7 @@ import org.holypresenter_songs.ui.components.SongSectionCard
 import org.holypresenter_songs.domain.editor.command.slide.SplitSlideCommand
 import org.holypresenter_songs.domain.editor.command.slide.MergeSlideWithPreviousCommand
 import androidx.compose.runtime.key
+import org.holypresenter_songs.domain.editor.command.order.AddSongOrderEntryCommand
 
 @Composable
 fun SongStructurePane(
@@ -70,6 +71,38 @@ fun SongStructurePane(
                                 section = section,
                                 slide = slide
                             )
+                        },
+                        onAddToOrder = { selectedSection ->
+                            val command = AddSongOrderEntryCommand(
+                                    sectionId = selectedSection.id
+                                )
+                            context.editor.execute(command)
+
+                            val updatedSong = context.state.song
+
+                            val createdEntry =
+                                updatedSong
+                                    ?.executionOrder
+                                    ?.firstOrNull {
+                                        it.id == command.entry.id
+                                    }
+
+                            val updatedSection =
+                                updatedSong
+                                    ?.sections
+                                    ?.firstOrNull {
+                                        it.id == selectedSection.id
+                                    }
+
+                            if (
+                                createdEntry != null &&
+                                updatedSection != null
+                            ) {
+                                context.state.selectOrderEntry(
+                                    entry = createdEntry,
+                                    section = updatedSection
+                                )
+                            }
                         },
                         onAddSlide = { selectedSection ->
                             context.editor.execute(

@@ -27,6 +27,7 @@ fun SongSectionCard(
     onDuplicateSection: (SongSection) -> Unit = {},
     onDeleteSection: (SongSection) -> Unit = {},
     onSlideMergeWithPrevious: (SongSlide) -> Unit = {},
+    onAddToOrder: (SongSection) -> Unit = {},
 ) {
     Row(
         modifier = modifier.fillMaxWidth()
@@ -58,6 +59,9 @@ fun SongSectionCard(
             ) {
                 SongSectionHeader(
                     section = section,
+                    onAddToOrder = {
+                        onAddToOrder(section)
+                    },
                     onDuplicate = {
                         onDuplicateSection(section)
                     },

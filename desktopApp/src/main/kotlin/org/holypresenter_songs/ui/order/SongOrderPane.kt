@@ -15,6 +15,8 @@ import org.holypresenter.platform.ui.interaction.dragdrop.HolyReorderColumn
 import org.holypresenter_songs.domain.editor.command.order.DeleteSongOrderEntryCommand
 import org.holypresenter_songs.domain.editor.command.order.MoveSongOrderEntryCommand
 import org.holypresenter_songs.presentation.SongEditorContext
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun SongOrderPane(
@@ -23,6 +25,8 @@ fun SongOrderPane(
 ) {
     val song = context.state.song
     val orderEntries = song?.executionOrder.orEmpty()
+    val selectedOrderEntryId = context.state.selectedOrderEntryId
+    val orderScrollState = rememberScrollState()
 
     val sectionsById =
         song
@@ -31,8 +35,6 @@ fun SongOrderPane(
             .associateBy { section ->
                 section.id
             }
-
-    val selectedOrderEntryId = context.state.selectedOrderEntryId
 
     Surface(
         modifier = modifier.fillMaxHeight(),
@@ -53,7 +55,9 @@ fun SongOrderPane(
 
             HolyReorderColumn(
                 items = orderEntries,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(orderScrollState),
                 onMove = { fromIndex, toIndex ->
                     context.editor.execute(
                         MoveSongOrderEntryCommand(
