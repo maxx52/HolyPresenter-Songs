@@ -18,23 +18,45 @@ class SongEditCommandStack {
     val redoDescription: String?
         get() = redoStack.lastOrNull()?.description
 
-    fun execute(song: Song, command: SongEditCommand): Song {
-        val updated = command.execute(song)
+    fun execute(
+        song: Song,
+        command: SongEditCommand
+    ): Song {
+        val updatedSong = command.execute(song)
+
+        /*
+         * Пустые команды в историю не добавляются.
+         */
+        if (updatedSong == song) {
+            return song
+        }
         undoStack.addLast(command)
         redoStack.clear()
-        return updated
+        return updatedSong
     }
 
-    fun undo(song: Song): Song? {
+    fun undo(
+        song: Song
+    ): Song? {
         val command = undoStack.removeLastOrNull() ?: return null
+        val updatedSong = command.undo(song)
+
+        /*
+         * Одна операция Undo всегда соответствует
+         * ровно одной команде.
+         */
         redoStack.addLast(command)
-        return command.undo(song)
+        return updatedSong
     }
 
-    fun redo(song: Song): Song? {
+    fun redo(
+        song: Song
+    ): Song? {
         val command = redoStack.removeLastOrNull() ?: return null
+        val updatedSong = command.execute(song)
+
         undoStack.addLast(command)
-        return command.execute(song)
+        return updatedSong
     }
 
     fun clear() {

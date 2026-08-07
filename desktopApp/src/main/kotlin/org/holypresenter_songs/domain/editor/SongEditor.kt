@@ -23,29 +23,41 @@ class SongEditor(
     val redoDescription: String?
         get() = commandStack.redoDescription
 
-    fun execute(command: SongEditCommand) {
+    fun execute(
+        command: SongEditCommand
+    ) {
         val currentSong = state.song ?: return
-        val updatedSong = commandStack.execute(currentSong, command)
 
+        val updatedSong =
+            commandStack.execute(
+                song = currentSong,
+                command = command
+            )
+
+        /*
+         * Не сохраняем песню и не обновляем
+         * интерфейс, если изменений не было.
+         */
+        if (updatedSong == currentSong) {
+            return
+        }
         repository.save(updatedSong)
         state.updateSong(updatedSong)
     }
 
     fun undo() {
         val currentSong = state.song ?: return
+        val updatedSong = commandStack.undo(currentSong) ?: return
 
-        commandStack.undo(currentSong)?.let {
-            repository.save(it)
-            state.updateSong(it)
-        }
+        repository.save(updatedSong)
+        state.updateSong(updatedSong)
     }
 
     fun redo() {
         val currentSong = state.song ?: return
+        val updatedSong = commandStack.redo(currentSong) ?: return
 
-        commandStack.redo(currentSong)?.let {
-            repository.save(it)
-            state.updateSong(it)
-        }
+        repository.save(updatedSong)
+        state.updateSong(updatedSong)
     }
 }

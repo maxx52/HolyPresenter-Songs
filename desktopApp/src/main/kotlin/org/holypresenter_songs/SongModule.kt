@@ -14,18 +14,14 @@ import java.io.File
 class SongModule : HolyModule {
     private val repository =
         JsonSongRepository(
-            songsDirectory = File(
-                "HolyPresenter",
-                "songs"
-            )
+            songsDirectory = resolveSongsDirectory()
         )
 
-    /**
+    /*
      * Единое состояние рабочего пространства
      * на всё время жизни модуля.
      */
     private val workspaceState = SongWorkspaceState()
-
     private lateinit var context: ModuleContext
     private var plannerItemHandlerRegistry: PlannerItemHandlerRegistry? = null
 
@@ -74,6 +70,56 @@ class SongModule : HolyModule {
             version = "1.0.0",
             apiVersion = "0.6.0",
             author = "HolyPresenter",
-            description = "Song management module"
+            description =
+                "Song management module"
         )
+
+    private fun resolveSongsDirectory(): File {
+        val localAppData =
+            System.getenv("LOCALAPPDATA")
+                ?.takeIf { path ->
+                    path.isNotBlank()
+                }
+                ?.let(::File)
+
+        val applicationDataDirectory =
+            if (localAppData != null) {
+                File(
+                    localAppData,
+                    "HolyPresenter"
+                )
+            } else {
+                File(
+                    System.getProperty("user.home"),
+                    ".holypresenter"
+                )
+            }
+
+        val songsDirectory =
+            File(
+                applicationDataDirectory,
+                "songs"
+            ).absoluteFile
+
+        if (
+            !songsDirectory.exists() &&
+            !songsDirectory.mkdirs()
+        ) {
+            error(
+                "Не удалось создать каталог песен: " +
+                        songsDirectory.absolutePath
+            )
+        }
+
+        require(songsDirectory.isDirectory) {
+            "Путь песен не является каталогом: " +
+                    songsDirectory.absolutePath
+        }
+
+        require(songsDirectory.canWrite()) {
+            "Нет доступа на запись в каталог песен: " +
+                    songsDirectory.absolutePath
+        }
+        return songsDirectory
+    }
 }

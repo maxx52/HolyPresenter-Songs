@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import org.holypresenter_songs.domain.SongSection
 import org.holypresenter_songs.domain.SongSlide
 import org.holypresenter_songs.ui.common.color
+import androidx.compose.runtime.key
 
 @Composable
 fun SongSectionCard(
@@ -68,39 +69,44 @@ fun SongSectionCard(
                 Spacer(Modifier.height(18.dp))
 
                 section.slides.forEachIndexed { slideIndex, slide ->
-                    SongSlideCard(
-                        slide = slide,
-                        selected = slide == selectedSlide,
-                        onSelect = {
-                            onSlideSelected(slide)
-                        },
-                        onTextChange = {
-                            onSlideChanged(slide, it)
-                        },
-                        onChordsChange = { chordsText ->
-                            onSlideChordsChanged(
-                                slide,
-                                chordsText
-                            )
-                        },
-                        onSplit = { splitOffset ->
-                            onSlideSplit(
-                                slide,
-                                splitOffset
-                            )
-                        },
-                        canMergeWithPrevious = slideIndex > 0,
-                        onMergeWithPrevious = {
-                            onSlideMergeWithPrevious(slide)
-                        },
-                        onDelete = {
-                            onDeleteSlide(section, slide)
-                        },
-                        onDuplicate = {
-                            onDuplicateSlide(section, slide)
-                        }
-                    )
-                    Spacer(Modifier.height(12.dp))
+                    key(slide.id) {
+                        SongSlideCard(
+                            slide = slide,
+                            selected = slide.id == selectedSlide?.id,
+                            onSelect = {
+                                onSlideSelected(slide)
+                            },
+                            onTextChange = {
+                                onSlideChanged(slide, it)
+                            },
+                            onChordsChange = { chordsText ->
+                                onSlideChordsChanged(
+                                    slide,
+                                    chordsText
+                                )
+                            },
+                            onSplit = { splitOffset ->
+                                onSlideSplit(
+                                    slide,
+                                    splitOffset
+                                )
+                            },
+                            canMergeWithPrevious = slideIndex > 0,
+                            onMergeWithPrevious = {
+                                onSlideMergeWithPrevious(slide)
+                            },
+                            onDelete = {
+                                onDeleteSlide(section, slide)
+                            },
+                            onDuplicate = {
+                                onDuplicateSlide(section, slide)
+                            }
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(12.dp)
+                        )
+                    }
                 }
                 AddSlideButton(
                     onClick = {

@@ -34,6 +34,7 @@ import org.holypresenter_songs.ui.components.AddSectionDialog
 import org.holypresenter_songs.ui.components.SongSectionCard
 import org.holypresenter_songs.domain.editor.command.slide.SplitSlideCommand
 import org.holypresenter_songs.domain.editor.command.slide.MergeSlideWithPreviousCommand
+import androidx.compose.runtime.key
 
 @Composable
 fun SongStructurePane(
@@ -60,140 +61,140 @@ fun SongStructurePane(
             Spacer(Modifier.height(12.dp))
 
             song?.sections?.forEach { section ->
-                SongSectionCard(
-                    section = section,
-                    selectedSlide = selectedSlide,
-                    onSlideSelected = { slide ->
-                        context.state.selectSlide(
-                            section = section,
-                            slide = slide
-                        )
-                    },
-                    onAddSlide = { selectedSection ->
-                        context.editor.execute(
-                            AddSlideCommand(selectedSection)
-                        )
-                    },
-                    onSlideChanged = { slide, text ->
-                        context.editor.execute(
-                            UpdateSlideTextCommand(
-                                section = section,
-                                slide = slide,
-                                oldText = slide.lines.joinToString("\n"),
-                                newText = text
-                            )
-                        )
-                    },
-                    onSlideChordsChanged = {
-                            slide,
-                            chordsText ->
-                        context.editor.execute(
-                            UpdateSlideChordsCommand(
-                                section = section,
-                                slide = slide,
-                                newText = chordsText
-                            )
-                        )
-                    },
-                    onSlideSplit = {
-                            slide,
-                            splitOffset ->
-                        val command =
-                            SplitSlideCommand(
-                                section = section,
-                                slide = slide,
-                                splitOffset = splitOffset
-                            )
-
-                        context.editor.execute(command)
-
-                        val updatedSection =
-                            context.state.song
-                                ?.sections
-                                ?.firstOrNull {
-                                    it.id == section.id
-                                }
-
-                        val createdSlide =
-                            updatedSection
-                                ?.slides
-                                ?.firstOrNull {
-                                    it.id == command.secondSlide.id
-                                }
-
-                        if (
-                            updatedSection != null &&
-                            createdSlide != null
-                        ) {
+                key(section.id) {
+                    SongSectionCard(
+                        section = section,
+                        selectedSlide = selectedSlide,
+                        onSlideSelected = { slide ->
                             context.state.selectSlide(
-                                section = updatedSection,
-                                slide = createdSlide
-                            )
-                        }
-                    },
-                    onSlideMergeWithPrevious = { slide ->
-                        val command =
-                            MergeSlideWithPreviousCommand(
                                 section = section,
-                                currentSlide = slide
-                            )
-
-                        val mergedSlideId = command.mergedSlideId
-
-                        context.editor.execute(command)
-
-                        val updatedSection =
-                            context.state.song
-                                ?.sections
-                                ?.firstOrNull {
-                                    it.id == section.id
-                                }
-
-                        val mergedSlide =
-                            updatedSection
-                                ?.slides
-                                ?.firstOrNull {
-                                    it.id == mergedSlideId
-                                }
-
-                        if (
-                            updatedSection != null &&
-                            mergedSlide != null
-                        ) {
-                            context.state.selectSlide(
-                                section = updatedSection,
-                                slide = mergedSlide
-                            )
-                        }
-                    },
-                    onDeleteSlide = { selectedSection, slide ->
-                        context.editor.execute(
-                            DeleteSlideCommand(
-                                section = selectedSection,
                                 slide = slide
                             )
-                        )
-                    },
-                    onDuplicateSlide = { selectedSection, slide ->
-                        context.editor.execute(
-                            DuplicateSlideCommand(
-                                section = selectedSection,
-                                slide = slide
+                        },
+                        onAddSlide = { selectedSection ->
+                            context.editor.execute(
+                                AddSlideCommand(selectedSection)
                             )
-                        )
-                    },
-                    onDeleteSection = { selectedSection ->
-                        context.editor.execute(
-                            DeleteSectionCommand(selectedSection)
-                        )
-                    },
-                    onDuplicateSection = { selectedSection ->
-                        context.editor.execute(
-                            DuplicateSectionCommand(selectedSection)
-                        )
-                    }
-                )
-                Spacer(Modifier.height(12.dp))
+                        },
+                        onSlideChanged = { slide, text ->
+                            context.editor.execute(
+                                UpdateSlideTextCommand(
+                                    section = section,
+                                    slide = slide,
+                                    oldText = slide.lines.joinToString("\n"),
+                                    newText = text
+                                )
+                            )
+                        },
+                        onSlideChordsChanged = { slide, chordsText ->
+                            context.editor.execute(
+                                UpdateSlideChordsCommand(
+                                    section = section,
+                                    slide = slide,
+                                    newText = chordsText
+                                )
+                            )
+                        },
+                        onSlideSplit = { slide, splitOffset ->
+                            val command =
+                                SplitSlideCommand(
+                                    section = section,
+                                    slide = slide,
+                                    splitOffset = splitOffset
+                                )
+
+                            context.editor.execute(command)
+
+                            val updatedSection =
+                                context.state.song
+                                    ?.sections
+                                    ?.firstOrNull {
+                                        it.id == section.id
+                                    }
+
+                            val createdSlide =
+                                updatedSection
+                                    ?.slides
+                                    ?.firstOrNull {
+                                        it.id == command.secondSlide.id
+                                    }
+
+                            if (
+                                updatedSection != null &&
+                                createdSlide != null
+                            ) {
+                                context.state.selectSlide(
+                                    section = updatedSection,
+                                    slide = createdSlide
+                                )
+                            }
+                        },
+                        onSlideMergeWithPrevious = { slide ->
+                            val command =
+                                MergeSlideWithPreviousCommand(
+                                    section = section,
+                                    currentSlide = slide
+                                )
+
+                            val mergedSlideId = command.mergedSlideId
+
+                            context.editor.execute(command)
+
+                            val updatedSection =
+                                context.state.song
+                                    ?.sections
+                                    ?.firstOrNull {
+                                        it.id == section.id
+                                    }
+
+                            val mergedSlide =
+                                updatedSection
+                                    ?.slides
+                                    ?.firstOrNull {
+                                        it.id == mergedSlideId
+                                    }
+
+                            if (
+                                updatedSection != null &&
+                                mergedSlide != null
+                            ) {
+                                context.state.selectSlide(
+                                    section = updatedSection,
+                                    slide = mergedSlide
+                                )
+                            }
+                        },
+                        onDeleteSlide = { selectedSection, slide ->
+                            context.editor.execute(
+                                DeleteSlideCommand(
+                                    section = selectedSection,
+                                    slide = slide
+                                )
+                            )
+                        },
+                        onDuplicateSlide = { selectedSection, slide ->
+                            context.editor.execute(
+                                DuplicateSlideCommand(
+                                    sourceSection = selectedSection,
+                                    sourceSlide = slide
+                                )
+                            )
+                        },
+                        onDeleteSection = { selectedSection ->
+                            context.editor.execute(
+                                DeleteSectionCommand(selectedSection)
+                            )
+                        },
+                        onDuplicateSection = { selectedSection ->
+                            context.editor.execute(
+                                DuplicateSectionCommand(selectedSection)
+                            )
+                        }
+                    )
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+                }
             }
 
             AddSectionButton(

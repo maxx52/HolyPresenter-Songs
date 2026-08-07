@@ -3,6 +3,7 @@ package org.holypresenter_songs.importer
 import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.SongId
 import org.holypresenter_songs.domain.SongMetadata
+import org.holypresenter_songs.domain.SongOrderEntry
 
 internal object SongImportFactory {
     fun create(
@@ -19,7 +20,9 @@ internal object SongImportFactory {
         val normalizedAuthor =
             draft.author
                 .trim()
-                .takeIf { it.isNotEmpty() }
+                .takeIf(String::isNotEmpty)
+
+        val sections = draft.sections
 
         return Song(
             id = SongId.random(),
@@ -27,7 +30,13 @@ internal object SongImportFactory {
                 title = draft.title.trim(),
                 author = normalizedAuthor
             ),
-            sections = draft.sections
+            sections = sections,
+            executionOrder =
+                sections.map { section ->
+                    SongOrderEntry(
+                        sectionId = section.id
+                    )
+                }
         )
     }
 }

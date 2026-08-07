@@ -20,9 +20,7 @@ class JsonSongRepository(
     }
 
     init {
-        if (!songsDirectory.exists()) {
-            songsDirectory.mkdirs()
-        }
+        ensureSongsDirectory()
     }
 
     override fun getAll(): List<Song> =
@@ -48,7 +46,7 @@ class JsonSongRepository(
     }
 
     override fun save(song: Song) {
-        songsDirectory.mkdirs()
+        ensureSongsDirectory()
 
         val targetFile = songFile(song.id)
         val temporaryFile = File(
@@ -119,4 +117,23 @@ class JsonSongRepository(
             songsDirectory,
             "${id.value}.json"
         )
+
+    private fun ensureSongsDirectory() {
+        if (
+            !songsDirectory.exists() &&
+            !songsDirectory.mkdirs()
+        ) {
+            error(
+                "Не удалось создать каталог песен: " + songsDirectory.absolutePath
+            )
+        }
+
+        require(songsDirectory.isDirectory) {
+            "Путь песен не является каталогом: " + songsDirectory.absolutePath
+        }
+
+        require(songsDirectory.canWrite()) {
+            "Нет доступа на запись в каталог песен: " + songsDirectory.absolutePath
+        }
+    }
 }
