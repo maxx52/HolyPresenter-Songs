@@ -62,7 +62,7 @@ private fun RowOption(
     }
 }
 
-private fun sectionTypeTitle(type: SongSectionType): String =
+internal fun sectionTypeTitle(type: SongSectionType): String =
     when (type) {
         SongSectionType.VERSE -> "Куплет"
         SongSectionType.CHORUS -> "Припев"

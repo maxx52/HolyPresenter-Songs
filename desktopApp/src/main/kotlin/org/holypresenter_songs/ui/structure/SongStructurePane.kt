@@ -36,6 +36,8 @@ import org.holypresenter_songs.domain.editor.command.slide.SplitSlideCommand
 import org.holypresenter_songs.domain.editor.command.slide.MergeSlideWithPreviousCommand
 import androidx.compose.runtime.key
 import org.holypresenter_songs.domain.editor.command.order.AddSongOrderEntryCommand
+import org.holypresenter_songs.domain.editor.command.section.ChangeSectionTypeCommand
+import org.holypresenter_songs.ui.components.ChangeSectionTypeDialog
 
 @Composable
 fun SongStructurePane(
@@ -45,6 +47,10 @@ fun SongStructurePane(
     var showAddDialog by remember { mutableStateOf(false) }
     val song = context.state.song
     val selectedSlide = context.state.selectedSlide
+
+    var sectionForTypeChange by remember {
+        mutableStateOf<SongSection?>(null)
+    }
 
     Card(
         modifier = modifier.fillMaxHeight()
@@ -103,6 +109,10 @@ fun SongStructurePane(
                                     section = updatedSection
                                 )
                             }
+                        },
+                        onChangeSectionType = { selectedSection ->
+                            sectionForTypeChange =
+                                selectedSection
                         },
                         onAddSlide = { selectedSection ->
                             context.editor.execute(
@@ -228,6 +238,24 @@ fun SongStructurePane(
                         modifier = Modifier.height(12.dp)
                     )
                 }
+            }
+
+            sectionForTypeChange?.let { section ->
+                ChangeSectionTypeDialog(
+                    section = section,
+                    onDismiss = {
+                        sectionForTypeChange = null
+                    },
+                    onChange = { newType ->
+                        context.editor.execute(
+                            ChangeSectionTypeCommand(
+                                sectionId = section.id,
+                                newType = newType
+                            )
+                        )
+                        sectionForTypeChange = null
+                    }
+                )
             }
 
             AddSectionButton(

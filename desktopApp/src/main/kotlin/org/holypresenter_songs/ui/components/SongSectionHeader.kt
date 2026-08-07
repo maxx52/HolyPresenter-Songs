@@ -20,7 +20,8 @@ fun SongSectionHeader(
     section: SongSection,
     onAddToOrder: () -> Unit = {},
     onDuplicate: () -> Unit = {},
-    onDelete: () -> Unit = {}
+    onDelete: () -> Unit = {},
+    onChangeType: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -76,7 +77,8 @@ fun SongSectionHeader(
 
         SongSectionMenu(
             onDuplicate = onDuplicate,
-            onDelete = onDelete
+            onDelete = onDelete,
+            onChangeType = onChangeType,
         )
     }
 }
