@@ -35,6 +35,7 @@ import org.holypresenter.platform.ui.presenter.HolyProjectionToolbar
 import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.SongSectionType
 import org.holypresenter_songs.domain.SongSlide
+import org.holypresenter_songs.domain.executionSections
 import java.awt.KeyEventDispatcher
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
@@ -71,11 +72,17 @@ fun SongSlidesPane(
             ?.value
             ?.textVisible == false
 
-    val slides = remember(song) {
-        song.sections.flatMap { section ->
-            section.slides
+    val executionSections =
+        remember(song) {
+            song.executionSections()
         }
-    }
+
+    val slides =
+        remember(song) {
+            executionSections.flatMap { executionSection ->
+                executionSection.section.slides
+            }
+        }
 
     var selectedSlideIndex by remember(song.id) {
         mutableStateOf<Int?>(null)
@@ -352,15 +359,18 @@ fun SongSlidesPane(
         ) {
             var globalIndex = 0
 
-            song.sections.forEach { section ->
-                item {
+            executionSections.forEach { executionSection ->
+                val section = executionSection.section
+
+                item(
+                    key = "section-${executionSection.entry.id}"
+                ) {
                     HolyPresenterSectionHeader(
                         title = sectionTitle(
                             type = section.type,
                             number = section.number
                         ),
-                        modifier =
-                            Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(top = 8.dp)
                     )
                 }
 
@@ -369,15 +379,12 @@ fun SongSlidesPane(
                     globalIndex++
 
                     item(
-                        key =
-                            "${song.id.value}-$currentIndex"
+                        key = "${song.id.value}-${executionSection.entry.id}-$currentIndex"
                     ) {
                         SongPresenterSlideCard(
                             slide = slide,
                             number = currentIndex + 1,
-                            selected =
-                                selectedSlideIndex ==
-                                        currentIndex,
+                            selected = selectedSlideIndex == currentIndex,
                             onClick = {
                                 showSlide(currentIndex)
                             }
@@ -434,20 +441,21 @@ private fun lazyItemIndexForSlide(
     var remainingSlideIndex = globalSlideIndex
     var lazyItemIndex = 0
 
-    song.sections.forEach { section ->
-        /*
-         * Заголовок секции занимает отдельный
-         * элемент внутри LazyColumn.
-         */
-        lazyItemIndex++
+    song.executionSections()
+        .forEach { executionSection ->
+            val section = executionSection.section
+            /*
+             * Заголовок секции является
+             * отдельным элементом LazyColumn.
+             */
+            lazyItemIndex++
 
-        if (remainingSlideIndex < section.slides.size) {
-            return lazyItemIndex + remainingSlideIndex
+            if (remainingSlideIndex < section.slides.size) {
+                return lazyItemIndex + remainingSlideIndex
+            }
+            remainingSlideIndex -= section.slides.size
+            lazyItemIndex += section.slides.size
         }
-
-        remainingSlideIndex -= section.slides.size
-        lazyItemIndex += section.slides.size
-    }
     return 0
 }
 

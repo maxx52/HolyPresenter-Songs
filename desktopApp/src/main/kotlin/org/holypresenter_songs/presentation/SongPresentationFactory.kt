@@ -12,6 +12,7 @@ import holypresenter.org.platform.api.presentation.theme.PresentationTextStyle
 import holypresenter.org.platform.api.presentation.theme.PresentationTheme
 import org.holypresenter_songs.domain.Song
 import org.holypresenter_songs.domain.SongBackground
+import org.holypresenter_songs.domain.executionSlides
 
 class SongPresentationFactory {
     fun create(song: Song): Presentation =
@@ -25,10 +26,8 @@ class SongPresentationFactory {
                 tags = song.metadata.tags.toList()
             ),
             theme = song.toPresentationTheme(),
-            slides = song.sections
-                .flatMap { section ->
-                    section.slides
-                }
+            slides = song
+                .executionSlides()
                 .mapIndexed { index, slide ->
                     PresentationSlide(
                         id = "${song.id.value}-slide-$index",
