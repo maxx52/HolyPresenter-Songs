@@ -1,41 +1,21 @@
 package org.holypresenter_songs.ui.presentation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.projection.ProjectionContent
 import holypresenter.org.platform.api.projection.ProjectionService
-import org.holypresenter.platform.ui.presenter.HolyPresenterSectionHeader
 import org.holypresenter.platform.ui.presenter.HolyProjectionToolbar
 import org.holypresenter_songs.domain.Song
-import org.holypresenter_songs.domain.SongSectionType
 import org.holypresenter_songs.domain.SongSlide
 import org.holypresenter_songs.domain.executionSections
+import org.holypresenter_songs.ui.common.accentColor
 import java.awt.KeyEventDispatcher
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
@@ -365,11 +345,8 @@ fun SongSlidesPane(
                 item(
                     key = "section-${executionSection.entry.id}"
                 ) {
-                    HolyPresenterSectionHeader(
-                        title = sectionTitle(
-                            type = section.type,
-                            number = section.number
-                        ),
+                    SongPresenterSectionHeader(
+                        section = section,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
@@ -385,8 +362,8 @@ fun SongSlidesPane(
                             slide = slide,
                             number = currentIndex + 1,
                             selected = selectedSlideIndex == currentIndex,
-                            onClick = {
-                                showSlide(currentIndex)
+                            accentColor = section.type.accentColor(),
+                            onClick = { showSlide(currentIndex)
                             }
                         )
                     }
@@ -458,30 +435,3 @@ private fun lazyItemIndexForSlide(
         }
     return 0
 }
-
-private fun sectionTitle(
-    type: SongSectionType,
-    number: Int
-): String =
-    when (type) {
-        SongSectionType.VERSE ->
-            "Куплет $number"
-
-        SongSectionType.CHORUS ->
-            "Припев $number"
-
-        SongSectionType.BRIDGE ->
-            "Бридж $number"
-
-        SongSectionType.INTRO ->
-            "Вступление"
-
-        SongSectionType.PRE_CHORUS ->
-            "Предпрепев"
-
-        SongSectionType.TAG ->
-            "Раздел $number"
-
-        SongSectionType.ENDING ->
-            "Завершение"
-    }

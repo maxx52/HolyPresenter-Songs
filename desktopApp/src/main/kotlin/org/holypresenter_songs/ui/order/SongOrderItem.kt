@@ -24,7 +24,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.holypresenter_songs.domain.SongSection
-import org.holypresenter_songs.domain.SongSectionType
+import org.holypresenter_songs.ui.common.accentColor
+import org.holypresenter_songs.ui.common.displayTitle
+import org.holypresenter_songs.ui.common.shortTitle
 
 @Composable
 fun SongOrderItem(
@@ -35,7 +37,7 @@ fun SongOrderItem(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val accentColor = sectionColor(section.type)
+    val accentColor = section.type.accentColor()
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -121,7 +123,7 @@ fun SongOrderItem(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = sectionShortName(section.type),
+                        text = section.type.shortTitle(),
                         color = Color.White,
                         style = MaterialTheme.typography.labelMedium
                     )
@@ -135,7 +137,7 @@ fun SongOrderItem(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = sectionTitle(section),
+                        text = section.displayTitle(),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -163,71 +165,6 @@ fun SongOrderItem(
         }
     }
 }
-
-private fun sectionTitle(
-    section: SongSection
-): String =
-    when (section.type) {
-        SongSectionType.VERSE ->
-            "Куплет ${section.number}"
-
-        SongSectionType.CHORUS ->
-            "Припев"
-
-        SongSectionType.PRE_CHORUS ->
-            "Предприпев"
-
-        SongSectionType.BRIDGE ->
-            "Бридж"
-
-        SongSectionType.INTRO ->
-            "Интро"
-
-        SongSectionType.ENDING ->
-            "Финал"
-
-        SongSectionType.TAG ->
-            "Тег"
-    }
-
-private fun sectionShortName(
-    type: SongSectionType
-): String =
-    when (type) {
-        SongSectionType.VERSE -> "К"
-        SongSectionType.CHORUS -> "П"
-        SongSectionType.PRE_CHORUS -> "ПП"
-        SongSectionType.BRIDGE -> "Б"
-        SongSectionType.INTRO -> "И"
-        SongSectionType.ENDING -> "Ф"
-        SongSectionType.TAG -> "Т"
-    }
-
-private fun sectionColor(
-    type: SongSectionType
-): Color =
-    when (type) {
-        SongSectionType.VERSE ->
-            Color(0xFF7C3AED)
-
-        SongSectionType.CHORUS ->
-            Color(0xFF22C55E)
-
-        SongSectionType.PRE_CHORUS ->
-            Color(0xFFF59E0B)
-
-        SongSectionType.BRIDGE ->
-            Color(0xFF3B82F6)
-
-        SongSectionType.INTRO ->
-            Color(0xFF06B6D4)
-
-        SongSectionType.ENDING ->
-            Color(0xFFEF4444)
-
-        SongSectionType.TAG ->
-            Color(0xFF6B7280)
-    }
 
 private fun lineCountText(
     count: Int
